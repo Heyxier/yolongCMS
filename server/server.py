@@ -19,12 +19,13 @@ from datetime import datetime, timedelta
 # ─── 配置 ───────────────────────────────────────
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "contact.db")
 HOST = "0.0.0.0"
-PORT = 8125
+PORT = 8123
 RATE_LIMIT = 5        # 每小时每个 IP 允许的请求数
 RATE_WINDOW = 3600    # 窗口时间（秒）
 CORS_ORIGINS = [
     "https://heyxier.github.io",
     "http://localhost:8080",
+    "http://localhost:4000",
 ]
 
 # ─── 初始化数据库 ───────────────────────────────
