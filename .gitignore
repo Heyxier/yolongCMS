@@ -1,0 +1,18 @@
+# 依赖
+node_modules/
+
+# 服务器数据（在服务器上独立运行）
+server/data/
+server/__pycache__/
+server/*.pyc
+
+# 本地仓库（各站点的 Git clone）
+repos/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

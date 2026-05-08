@@ -1,13 +1,1 @@
-[
-  {
-    "id": "yolongtec",
-    "name": "\u4e9a\u9686\u7535\u52a8\u5de5\u5177",
-    "repo_url": "git@github.com:Heyxier/yolongtec-website-demo.git",
-    "branch": "main",
-    "local_path": "~/yolongcms-desktop/repos/yolongtec",
-    "contact_server": {
-      "url": "http://47.100.81.126:8123/api/contact",
-      "site_id": "yolongtec"
-    }
-  }
-]
+[]
