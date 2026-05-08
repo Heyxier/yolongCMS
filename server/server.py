@@ -32,6 +32,8 @@ QQ_API_BASE = "https://api.sgroup.qq.com"
 QQ_TOKEN_URL = "https://bots.qq.com/app/getAppAccessToken"
 CORS_ORIGINS = [
     "https://heyxier.github.io",
+    "https://yolongtec.com",
+    "https://www.yolongtec.com",
     "http://localhost:8080",
     "http://localhost:4000",
 ]
@@ -98,25 +100,32 @@ def validate_contact(data):
     return errors
 
 
-# ─── QQ Bot 推送 ─────────────────────────────────
+# ─── 日志 ───────────────────────────────────────
+import logging
+LOG_PATH = os.path.join(os.path.dirname(__file__), "data", "contact.log")
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+logging.basicConfig(
+    filename=LOG_PATH,
+    level=logging.INFO,
+    format="%(asctime)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+# ─── QQ Bot 推送 (同步版) ────────────────────────
 _token_cache = {"token": None, "expires_at": 0}
 
-async def send_qq_notification(site_id, data):
-    """发送客户留言通知到 QQ"""
+def send_qq_notification(site_id, data):
+    """发送客户留言通知到 QQ（同步调用）"""
     now = time.time()
     if not _token_cache["token"] or now >= _token_cache["expires_at"] - 60:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                QQ_TOKEN_URL,
-                json={
-                    "appId": QQ_APP_ID,
-                    "clientSecret": QQ_CLIENT_SECRET,
-                },
-            )
-            resp.raise_for_status()
-            body = resp.json()
-            _token_cache["token"] = body["access_token"]
-            _token_cache["expires_at"] = now + int(body.get("expires_in", 7200))
+        resp = httpx.post(
+            QQ_TOKEN_URL,
+            json={"appId": QQ_APP_ID, "clientSecret": QQ_CLIENT_SECRET},
+        )
+        resp.raise_for_status()
+        body = resp.json()
+        _token_cache["token"] = body["access_token"]
+        _token_cache["expires_at"] = now + int(body.get("expires_in", 7200))
 
     msg = (
         f"📬 **新客户留言**\n"
@@ -130,17 +139,19 @@ async def send_qq_notification(site_id, data):
         msg += f"电话: {data['phone']}\n"
     msg += f"---\n{data['message'][:200]}{'...' if len(data['message']) > 200 else ''}"
 
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            f"{QQ_API_BASE}/v2/users/{QQ_TARGET_USER}/messages",
-            json={"content": msg, "msg_type": 0},
-            headers={
-                "Authorization": f"QQBot {_token_cache['token']}",
-                "X-Union-Appid": QQ_APP_ID,
-            },
-        )
-        if resp.status_code != 200:
-            print(f"[QQ] 推送失败: {resp.status_code}")
+    resp = httpx.post(
+        f"{QQ_API_BASE}/v2/users/{QQ_TARGET_USER}/messages",
+        json={"content": msg, "msg_type": 0},
+        headers={
+            "Authorization": f"QQBot {_token_cache['token']}",
+            "X-Union-Appid": QQ_APP_ID,
+        },
+    )
+    if resp.status_code != 200:
+        logging.error(f"[QQ] 推送失败 status={resp.status_code} body={resp.text}")
+        raise RuntimeError(f"QQ push failed: {resp.status_code}")
+    else:
+        logging.info(f"[QQ] 推送成功 → {QQ_TARGET_USER}")
 
 
 # ─── HTTP Handler ──────────────────────────────
@@ -225,10 +236,9 @@ class ContactHandler(BaseHTTPRequestHandler):
             
             # 推送到 QQ
             try:
-                import asyncio
-                asyncio.run(send_qq_notification(site_id, data))
+                send_qq_notification(site_id, data)
             except Exception as e:
-                print(f"[QQ] 推送异常: {e}")
+                logging.error(f"[QQ] 推送异常: {e}")
         
         else:
             self._send_json(404, {"error": "not found"})
