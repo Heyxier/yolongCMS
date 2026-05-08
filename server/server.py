@@ -12,6 +12,7 @@ import json
 import sqlite3
 import os
 import time
+import httpx
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
@@ -22,6 +23,13 @@ HOST = "0.0.0.0"
 PORT = 8123
 RATE_LIMIT = 5        # 每小时每个 IP 允许的请求数
 RATE_WINDOW = 3600    # 窗口时间（秒）
+
+# QQ Bot 推送配置
+QQ_APP_ID = os.environ.get("QQ_APP_ID", "1903939537")
+QQ_CLIENT_SECRET = os.environ.get("QQ_CLIENT_SECRET", "lSwDH7k9LK5btxnP")
+QQ_TARGET_USER = os.environ.get("QQ_TARGET_USER", "E53FF3D46D1FE4BECE8717A13827E31F")
+QQ_API_BASE = "https://api.sgroup.qq.com"
+QQ_TOKEN_URL = "https://bots.qq.com/app/getAppAccessToken"
 CORS_ORIGINS = [
     "https://heyxier.github.io",
     "http://localhost:8080",
@@ -88,6 +96,52 @@ def validate_contact(data):
         errors.append("message too long (max 5000)")
     
     return errors
+
+
+# ─── QQ Bot 推送 ─────────────────────────────────
+_token_cache = {"token": None, "expires_at": 0}
+
+async def send_qq_notification(site_id, data):
+    """发送客户留言通知到 QQ"""
+    now = time.time()
+    if not _token_cache["token"] or now >= _token_cache["expires_at"] - 60:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                QQ_TOKEN_URL,
+                json={
+                    "appId": QQ_APP_ID,
+                    "clientSecret": QQ_CLIENT_SECRET,
+                },
+            )
+            resp.raise_for_status()
+            body = resp.json()
+            _token_cache["token"] = body["access_token"]
+            _token_cache["expires_at"] = now + int(body.get("expires_in", 7200))
+
+    msg = (
+        f"📬 **新客户留言**\n"
+        f"站点: {site_id}\n"
+        f"姓名: {data['name']}\n"
+    )
+    if data.get("company"):
+        msg += f"公司: {data['company']}\n"
+    msg += f"邮箱: {data['email']}\n"
+    if data.get("phone"):
+        msg += f"电话: {data['phone']}\n"
+    msg += f"---\n{data['message'][:200]}{'...' if len(data['message']) > 200 else ''}"
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{QQ_API_BASE}/v2/users/{QQ_TARGET_USER}/messages",
+            json={"content": msg, "msg_type": 0},
+            headers={
+                "Authorization": f"QQBot {_token_cache['token']}",
+                "X-Union-Appid": QQ_APP_ID,
+            },
+        )
+        if resp.status_code != 200:
+            print(f"[QQ] 推送失败: {resp.status_code}")
+
 
 # ─── HTTP Handler ──────────────────────────────
 class ContactHandler(BaseHTTPRequestHandler):
@@ -161,13 +215,20 @@ class ContactHandler(BaseHTTPRequestHandler):
             # 返回成功
             self._send_json(200, {"status": "ok", "message_id": msg_id})
             
-            # 打印日志（后续可替换为 QQ Bot 推送）
+            # 打印日志 + 推送 QQ
             print(f"\n📬 [新留言] site={site_id} id={msg_id}")
             print(f"   姓名: {data['name']}")
             print(f"   公司: {data.get('company', '-')}")
             print(f"   邮箱: {data['email']}")
             print(f"   电话: {data.get('phone', '-')}")
             print(f"   内容: {data['message'][:100]}...\n")
+            
+            # 推送到 QQ
+            try:
+                import asyncio
+                asyncio.run(send_qq_notification(site_id, data))
+            except Exception as e:
+                print(f"[QQ] 推送异常: {e}")
         
         else:
             self._send_json(404, {"error": "not found"})
