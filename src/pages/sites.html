@@ -1,5 +1,64 @@
-<div class="page-placeholder">
+<div class="page-header">
+    <div class="page-title">
+        <h2>📁 站点管理</h2>
+        <p class="page-subtitle">管理所有需要维护的网站</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" id="btnCleanup" title="清理不在管理列表内的站点本地数据">
+            🗑️ 清理站点数据
+        </button>
+        <button class="btn btn-primary" id="btnAddSite">+ 添加站点</button>
+    </div>
+</div>
+
+<!-- 站点列表 -->
+<div class="sites-list" id="sitesList">
+    <!-- 由 JS 动态渲染 -->
+</div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="emptyState" style="display:none;">
     <div class="placeholder-icon">📁</div>
-    <h2>站点管理</h2>
-    <p>站点管理功能将在下一阶段开发</p>
+    <h3>暂无站点</h3>
+    <p>点击"添加站点"开始管理你的网站</p>
+</div>
+
+<!-- ===== 添加站点弹窗 ===== -->
+<div class="modal-overlay" id="modalOverlay" style="display:none;">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>添加站点</h3>
+            <button class="btn-icon modal-close" id="modalClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>站点名称 <span class="required">*</span></label>
+                <input type="text" id="inputName" placeholder="例如：亚隆电动工具" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>站点 ID <span class="required">*</span></label>
+                <input type="text" id="inputId" placeholder="例如：yolongtec（英文、数字、连字符）" class="form-input">
+                <span class="form-hint">唯一标识，用于仓库目录名。创建后不可修改。</span>
+            </div>
+            <div class="form-group">
+                <label>GitHub 仓库地址 <span class="required">*</span></label>
+                <input type="text" id="inputRepo" placeholder="例如：https://github.com/Heyxier/yolongtec-website-demo.git" class="form-input">
+            </div>
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>分支</label>
+                    <input type="text" id="inputBranch" value="main" class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>API 服务器地址</label>
+                    <input type="text" id="inputServer" placeholder="例如：https://api.yolongtec.com" class="form-input">
+                    <span class="form-hint">可选，用于拉取留言</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="modalCancel">取消</button>
+            <button class="btn btn-primary" id="modalConfirm">确认添加</button>
+        </div>
+    </div>
 </div>

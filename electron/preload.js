@@ -5,7 +5,15 @@ contextBridge.exposeInMainWorld('yolongcms', {
     // 应用信息
     platform: process.platform,
 
-    // IPC 通信桥 — 后续功能扩展用
+    // ===== 站点管理 API =====
+    sites: {
+        read: () => ipcRenderer.invoke('sites:read'),
+        write: (sites) => ipcRenderer.invoke('sites:write', sites),
+        listRepos: () => ipcRenderer.invoke('sites:list-repos'),
+        deleteRepo: (repoId) => ipcRenderer.invoke('sites:delete-repo', repoId),
+    },
+
+    // IPC 通信桥
     send: (channel, data) => ipcRenderer.send(channel, data),
     invoke: (channel, data) => ipcRenderer.invoke(channel, data),
     on: (channel, callback) => {
