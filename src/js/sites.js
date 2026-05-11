@@ -153,7 +153,17 @@
             if (window.__app) window.__app.refreshSites();
             render();
             closeModal();
-            showToast('✅ 站点 "' + name + '" 已添加');
+
+            // 异步克隆仓库（不阻塞 UI）
+            showToast('🔄 正在克隆仓库 ' + name + '...');
+            if (window.yolongcms && window.yolongcms.sites) {
+                const result = await window.yolongcms.sites.cloneRepo(repo, id, branch);
+                if (result.success) {
+                    showToast('✅ 站点 "' + name + '" 已添加，仓库已克隆');
+                } else {
+                    showToast('⚠️ 站点已添加，但仓库克隆失败: ' + (result.error || '未知错误'));
+                }
+            }
         } catch (err) {
             console.error('[YolongCMS] confirmAdd error:', err);
             showToast('❌ 操作失败: ' + (err.message || '未知错误'));

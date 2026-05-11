@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('yolongcms', {
         write: (sites) => ipcRenderer.invoke('sites:write', sites),
         listRepos: () => ipcRenderer.invoke('sites:list-repos'),
         deleteRepo: (repoId) => ipcRenderer.invoke('sites:delete-repo', repoId),
+        cloneRepo: (repoUrl, siteId, branch) => ipcRenderer.invoke('sites:clone-repo', { repoUrl, siteId, branch }),
     },
 
     // IPC 通信桥

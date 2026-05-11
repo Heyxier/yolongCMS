@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const simpleGit = require('simple-git');
 
 // ===== 路径常量 =====
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -89,6 +90,22 @@ function registerIpcHandlers() {
     ipcMain.handle('sites:delete-repo', (_event, repoId) => {
         deleteRepo(repoId);
         return true;
+    });
+
+    // 克隆站点 Git 仓库到本地
+    ipcMain.handle('sites:clone-repo', async (_event, { repoUrl, siteId, branch }) => {
+        const targetDir = path.join(__dirname, '..', 'repos', siteId);
+        ensureDir(path.dirname(targetDir));
+        if (fs.existsSync(targetDir)) {
+            return { success: false, error: '目录已存在: ' + targetDir };
+        }
+        try {
+            const git = simpleGit();
+            await git.clone(repoUrl, targetDir, ['--branch', branch || 'main']);
+            return { success: true, path: targetDir };
+        } catch (err) {
+            return { success: false, error: err.message || '克隆失败' };
+        }
     });
 }
 
