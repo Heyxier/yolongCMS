@@ -228,11 +228,6 @@
         els.modalCancel.addEventListener('click', closeModal);
         els.modalConfirm.addEventListener('click', confirmAdd);
 
-        // 点击遮罩关闭
-        els.overlay.addEventListener('click', (e) => {
-            if (e.target === els.overlay) closeModal();
-        });
-
         // 回车提交
         els.overlay.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') confirmAdd();
