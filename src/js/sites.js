@@ -5,6 +5,9 @@
     // ===== 数据 =====
     let sites = [];
 
+    // ===== 表单临时缓存（防止切换窗口误关弹窗丢失数据） =====
+    let formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
+
     // ===== 元素缓存 =====
     let els = {};
 
@@ -83,16 +86,23 @@
 
     // ===== 添加站点 =====
     function openAddModal() {
-        els.inputName.value = '';
-        els.inputId.value = '';
-        els.inputRepo.value = '';
-        els.inputBranch.value = 'main';
-        els.inputServer.value = '';
+        // 从缓存恢复表单数据（防止切换窗口误关后丢失）
+        els.inputName.value = formCache.name;
+        els.inputId.value = formCache.id;
+        els.inputRepo.value = formCache.repo;
+        els.inputBranch.value = formCache.branch || 'main';
+        els.inputServer.value = formCache.server;
         els.overlay.style.display = 'flex';
         setTimeout(() => els.inputName.focus(), 100);
     }
 
     function closeModal() {
+        // 关闭前保存表单数据到缓存（防误关丢数据）
+        if (els.inputName) formCache.name = els.inputName.value;
+        if (els.inputId) formCache.id = els.inputId.value;
+        if (els.inputRepo) formCache.repo = els.inputRepo.value;
+        if (els.inputBranch) formCache.branch = els.inputBranch.value;
+        if (els.inputServer) formCache.server = els.inputServer.value;
         if (els.overlay) els.overlay.style.display = 'none';
     }
 
@@ -118,6 +128,8 @@
 
             sites.push({ id, name, repo, branch, server });
             await saveSites();
+            // 添加成功后清除表单缓存
+            formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
             render();
             closeModal();
             showToast('✅ 站点 "' + name + '" 已添加');
