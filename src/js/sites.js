@@ -40,40 +40,45 @@
 
     // ===== 渲染 =====
     function render() {
-        if (!sites.length) {
-            els.list.innerHTML = '';
-            els.empty.style.display = 'flex';
-            return;
+        try {
+            if (!els.list) { console.warn('[YolongCMS] render: sitesList not found'); return; }
+            if (!sites.length) {
+                els.list.innerHTML = '';
+                if (els.empty) els.empty.style.display = 'flex';
+                return;
+            }
+            if (els.empty) els.empty.style.display = 'none';
+
+            let html = '';
+            sites.forEach((site, index) => {
+                html += `
+                    <div class="site-card">
+                        <div class="site-info">
+                            <div class="site-name">${escapeHtml(site.name)}</div>
+                            <div class="site-meta">
+                                <span class="site-tag">${escapeHtml(site.id)}</span>
+                                <span class="site-detail">${escapeHtml(site.repo)}</span>
+                            </div>
+                            <div class="site-meta">
+                                <span class="site-server">${escapeHtml(site.server || '未配置 API')}</span>
+                                <span class="site-branch">🌿 ${escapeHtml(site.branch || 'main')}</span>
+                            </div>
+                        </div>
+                        <div class="site-actions">
+                            <button class="btn btn-danger-outline btn-sm" data-index="${index}" data-action="delete">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            els.list.innerHTML = html;
+
+            // 绑定删除事件
+            els.list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+                btn.addEventListener('click', () => deleteSite(parseInt(btn.dataset.index)));
+            });
+        } catch (err) {
+            console.error('[YolongCMS] render error:', err);
         }
-        els.empty.style.display = 'none';
-
-        let html = '';
-        sites.forEach((site, index) => {
-            html += `
-                <div class="site-card">
-                    <div class="site-info">
-                        <div class="site-name">${escapeHtml(site.name)}</div>
-                        <div class="site-meta">
-                            <span class="site-tag">${escapeHtml(site.id)}</span>
-                            <span class="site-detail">${escapeHtml(site.repo)}</span>
-                        </div>
-                        <div class="site-meta">
-                            <span class="site-server">${escapeHtml(site.server || '未配置 API')}</span>
-                            <span class="site-branch">🌿 ${escapeHtml(site.branch || 'main')}</span>
-                        </div>
-                    </div>
-                    <div class="site-actions">
-                        <button class="btn btn-danger-outline btn-sm" data-index="${index}" data-action="delete">删除</button>
-                    </div>
-                </div>
-            `;
-        });
-        els.list.innerHTML = html;
-
-        // 绑定删除事件
-        els.list.querySelectorAll('[data-action="delete"]').forEach(btn => {
-            btn.addEventListener('click', () => deleteSite(parseInt(btn.dataset.index)));
-        });
     }
 
     // ===== 添加站点 =====
@@ -88,48 +93,58 @@
     }
 
     function closeModal() {
-        els.overlay.style.display = 'none';
+        if (els.overlay) els.overlay.style.display = 'none';
     }
 
     async function confirmAdd() {
-        const name = els.inputName.value.trim();
-        const id = els.inputId.value.trim();
-        const repo = els.inputRepo.value.trim();
-        const branch = els.inputBranch.value.trim() || 'main';
-        const server = els.inputServer.value.trim();
+        try {
+            const name = els.inputName.value.trim();
+            const id = els.inputId.value.trim();
+            const repo = els.inputRepo.value.trim();
+            const branch = els.inputBranch.value.trim() || 'main';
+            const server = els.inputServer.value.trim();
 
-        // 校验
-        if (!name) { showToast('请输入站点名称'); return; }
-        if (!id) { showToast('请输入站点 ID'); return; }
-        if (!/^[a-zA-Z0-9_-]+$/.test(id)) { showToast('站点 ID 只能包含英文、数字、下划线和连字符'); return; }
-        if (!repo) { showToast('请输入 GitHub 仓库地址'); return; }
+            // 校验
+            if (!name) { showToast('请输入站点名称'); return; }
+            if (!id) { showToast('请输入站点 ID'); return; }
+            if (!/^[a-zA-Z0-9_-]+$/.test(id)) { showToast('站点 ID 只能包含英文、数字、下划线和连字符'); return; }
+            if (!repo) { showToast('请输入 GitHub 仓库地址'); return; }
 
-        // 检查 ID 是否已存在
-        if (sites.some(s => s.id === id)) {
-            showToast('站点 ID "' + id + '" 已存在');
-            return;
+            // 检查 ID 是否已存在
+            if (sites.some(s => s.id === id)) {
+                showToast('站点 ID "' + id + '" 已存在');
+                return;
+            }
+
+            sites.push({ id, name, repo, branch, server });
+            await saveSites();
+            render();
+            closeModal();
+            showToast('✅ 站点 "' + name + '" 已添加');
+        } catch (err) {
+            console.error('[YolongCMS] confirmAdd error:', err);
+            showToast('❌ 操作失败: ' + (err.message || '未知错误'));
         }
-
-        sites.push({ id, name, repo, branch, server });
-        await saveSites();
-        render();
-        closeModal();
-        showToast('✅ 站点 "' + name + '" 已添加');
     }
 
     // ===== 删除站点 =====
     async function deleteSite(index) {
-        const site = sites[index];
-        if (!site) return;
+        try {
+            const site = sites[index];
+            if (!site) return;
 
-        if (!confirm('确认将站点 "' + site.name + '" 移出管理列表？\n\n其本地数据（repos/' + site.id + '/）将被保留。')) {
-            return;
+            if (!confirm('确认将站点 "' + site.name + '" 移出管理列表？\n\n其本地数据（repos/' + site.id + '/）将被保留。')) {
+                return;
+            }
+
+            sites.splice(index, 1);
+            await saveSites();
+            render();
+            showToast('已移除站点 "' + site.name + '"，本地数据已保留');
+        } catch (err) {
+            console.error('[YolongCMS] deleteSite error:', err);
+            showToast('❌ 删除失败: ' + (err.message || '未知错误'));
         }
-
-        sites.splice(index, 1);
-        await saveSites();
-        render();
-        showToast('已移除站点 "' + site.name + '"，本地数据已保留');
     }
 
     // ===== 清理站点数据 =====
