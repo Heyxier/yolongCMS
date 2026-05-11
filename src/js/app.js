@@ -219,6 +219,35 @@
         if (page) loadPage(page);
     }
 
+    // ===== 服务器状态检测 =====
+    let healthCheckTimer = null;
+    const SERVER_HEALTH_URL = 'https://api.yolongtec.com/health';
+
+    async function checkServerStatus() {
+        const $statusDot = document.querySelector('.status-dot');
+        const $statusText = document.querySelector('.status-text');
+        if (!$statusDot) return;
+
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            const resp = await fetch(SERVER_HEALTH_URL, {
+                signal: controller.signal,
+                cache: 'no-cache',
+            });
+            clearTimeout(timeout);
+            if (resp.ok) {
+                $statusDot.className = 'status-dot online';
+                if ($statusText) $statusText.textContent = '服务器在线';
+            } else {
+                throw new Error('Not OK');
+            }
+        } catch {
+            $statusDot.className = 'status-dot offline';
+            if ($statusText) $statusText.textContent = '服务器离线';
+        }
+    }
+
     // ===== 暴露给其他模块的 API =====
     // sites.js 等可以通过 window.__app 访问
     window.__app = {
@@ -253,6 +282,11 @@
 
         updateTopbar();
         renderDropdown();
+
+        // 检测服务器状态
+        checkServerStatus();
+        // 每 60 秒重新检测
+        healthCheckTimer = setInterval(checkServerStatus, 60000);
 
         // 默认页面
         loadPage('dashboard');

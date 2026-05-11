@@ -14,7 +14,8 @@ import os
 import time
 import httpx
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse
+from socketserver import ThreadingMixIn
+from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timedelta
 
 # ─── 配置 ───────────────────────────────────────
@@ -315,7 +316,13 @@ class ContactHandler(BaseHTTPRequestHandler):
 # ─── 启动 ───────────────────────────────────────
 if __name__ == "__main__":
     init_db()
-    server = HTTPServer((HOST, PORT), ContactHandler)
+    
+    class ThreadedContactServer(ThreadingMixIn, HTTPServer):
+        """多线程 HTTP 服务器，避免单请求卡死影响后续请求"""
+        allow_reuse_address = True
+        daemon_threads = True
+    
+    server = ThreadedContactServer((HOST, PORT), ContactHandler)
     print(f"✅ YolongCMS Contact Server running on http://{HOST}:{PORT}")
     print(f"   POST   /api/contact/<site_id>  — 接收联系表单")
     print(f"   GET    /api/messages/<site_id>  — 拉取留言列表")

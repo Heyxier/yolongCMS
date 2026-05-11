@@ -136,6 +136,8 @@
             if (!id) { showToast('请输入站点 ID'); return; }
             if (!/^[a-zA-Z0-9_-]+$/.test(id)) { showToast('站点 ID 只能包含英文、数字、下划线和连字符'); return; }
             if (!repo) { showToast('请输入 GitHub 仓库地址'); return; }
+            if (!/^https?:\/\/.+/.test(repo)) { showToast('仓库地址格式不正确，需以 http:// 或 https:// 开头'); return; }
+            if (server && !/^https?:\/\/.+/.test(server)) { showToast('API 服务器地址格式不正确，需以 http:// 或 https:// 开头'); return; }
 
             // 检查 ID 是否已存在
             if (sites.some(s => s.id === id)) {
