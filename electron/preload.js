@@ -5,6 +5,12 @@ contextBridge.exposeInMainWorld('yolongcms', {
     // 应用信息
     platform: process.platform,
 
+    // ===== 应用状态 API =====
+    app: {
+        read: () => ipcRenderer.invoke('app:read'),
+        write: (data) => ipcRenderer.invoke('app:write', data),
+    },
+
     // ===== 站点管理 API =====
     sites: {
         read: () => ipcRenderer.invoke('sites:read'),

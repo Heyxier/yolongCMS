@@ -6,6 +6,7 @@ const fs = require('fs');
 // ===== 路径常量 =====
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SITES_FILE = path.join(DATA_DIR, 'sites.json');
+const APP_FILE = path.join(DATA_DIR, 'app.json');
 const REPOS_DIR = path.join(__dirname, '..', 'repos');
 
 // ===== 工具函数 =====
@@ -13,19 +14,32 @@ function ensureDir(dir) {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
+function readJSON(file, defaultVal = null) {
+    ensureDir(path.dirname(file));
+    if (!fs.existsSync(file)) return defaultVal;
+    try { return JSON.parse(fs.readFileSync(file, 'utf-8')); }
+    catch { return defaultVal; }
+}
+
+function writeJSON(file, data) {
+    ensureDir(path.dirname(file));
+    fs.writeFileSync(file, JSON.stringify(data, null, 4), 'utf-8');
+}
+
 function readSites() {
-    ensureDir(DATA_DIR);
-    if (!fs.existsSync(SITES_FILE)) return [];
-    try {
-        return JSON.parse(fs.readFileSync(SITES_FILE, 'utf-8'));
-    } catch {
-        return [];
-    }
+    return readJSON(SITES_FILE, []);
 }
 
 function writeSites(sites) {
-    ensureDir(DATA_DIR);
-    fs.writeFileSync(SITES_FILE, JSON.stringify(sites, null, 4), 'utf-8');
+    writeJSON(SITES_FILE, sites);
+}
+
+function readApp() {
+    return readJSON(APP_FILE, { activeSiteId: null });
+}
+
+function writeApp(data) {
+    writeJSON(APP_FILE, data);
 }
 
 function listRepos() {
@@ -52,6 +66,17 @@ function registerIpcHandlers() {
     // 保存站点列表
     ipcMain.handle('sites:write', (_event, sites) => {
         writeSites(sites);
+        return true;
+    });
+
+    // 读取应用状态
+    ipcMain.handle('app:read', () => {
+        return readApp();
+    });
+
+    // 保存应用状态
+    ipcMain.handle('app:write', (_event, data) => {
+        writeApp(data);
         return true;
     });
 

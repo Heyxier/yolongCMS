@@ -1,9 +1,8 @@
-// YolongCMS Desktop — App 主逻辑
+// YolongCMS Desktop — App 主逻辑 (Card 3: 站点上下文)
 (function () {
     'use strict';
 
     // ===== 页面注册 =====
-    // 每个页面对应 src/pages/{page}.html，内容会被加载到 #content
     const PAGES = {
         dashboard:  { title: '仪表盘',   icon: '📊' },
         products:   { title: '产品',     icon: '📦' },
@@ -19,11 +18,166 @@
     const $sidebar   = document.getElementById('sidebar');
     const $content   = document.getElementById('content');
     const $navItems  = document.querySelectorAll('.nav-item[data-page]');
+    const $siteBtn   = document.getElementById('siteSelector');
     const $siteLabel = document.getElementById('currentSite');
+    const $siteDropdown = document.getElementById('siteDropdown');
 
     // ===== 当前状态 =====
     let currentPage = 'dashboard';
-    let currentSite = null;  // { id, name, repo, branch, server }
+    let currentSite = null;  // { id, name, repo, branch, server } | null
+    let allSites = [];       // 完整站点列表
+
+    // ===== 工具函数 =====
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // ===== 加载站点列表 =====
+    async function loadSites() {
+        if (window.yolongcms && window.yolongcms.sites) {
+            allSites = await window.yolongcms.sites.read();
+        } else {
+            allSites = [];
+        }
+        return allSites;
+    }
+
+    // ===== 加载应用状态 =====
+    async function loadAppState() {
+        if (window.yolongcms && window.yolongcms.app) {
+            return await window.yolongcms.app.read();
+        }
+        return { activeSiteId: null };
+    }
+
+    // ===== 保存应用状态 =====
+    async function saveAppState() {
+        if (window.yolongcms && window.yolongcms.app && currentSite) {
+            await window.yolongcms.app.write({
+                activeSiteId: currentSite.id,
+            });
+        }
+    }
+
+    // ===== 设置当前站点 =====
+    async function setCurrentSite(siteId) {
+        // 查找站点
+        const site = allSites.find(s => s.id === siteId);
+        if (!site) {
+            // 站点不存在或已删除 → 清空
+            currentSite = null;
+            updateTopbar();
+            if (window.yolongcms && window.yolongcms.app) {
+                await window.yolongcms.app.write({ activeSiteId: null });
+            }
+            return;
+        }
+
+        currentSite = site;
+        updateTopbar();
+        renderDropdown();
+        await saveAppState();
+    }
+
+    // ===== 刷新站点列表（从文件重新读取） =====
+    async function refreshSites() {
+        await loadSites();
+        // 如果当前选中的站点已被删除，清空选择
+        if (currentSite && !allSites.some(s => s.id === currentSite.id)) {
+            currentSite = null;
+            if (window.yolongcms && window.yolongcms.app) {
+                await window.yolongcms.app.write({ activeSiteId: null });
+            }
+        }
+        updateTopbar();
+        renderDropdown();
+    }
+
+    // ===== 更新顶部栏 =====
+    function updateTopbar() {
+        if (currentSite) {
+            $siteLabel.textContent = escapeHtml(currentSite.name) + '  ▾';
+            $siteBtn.classList.remove('no-site');
+        } else if (allSites.length > 0) {
+            $siteLabel.textContent = '请选择站点  ▾';
+            $siteBtn.classList.remove('no-site');
+        } else {
+            $siteLabel.textContent = '未选择站点';
+            $siteBtn.classList.add('no-site');
+        }
+    }
+
+    // ===== 渲染下拉菜单 =====
+    function renderDropdown() {
+        if (!allSites.length) {
+            $siteDropdown.innerHTML = '<div class="dropdown-item disabled">暂无站点</div>';
+            return;
+        }
+
+        let html = '';
+        allSites.forEach(site => {
+            const active = currentSite && currentSite.id === site.id;
+            html += `
+                <div class="dropdown-item ${active ? 'active' : ''}" data-site-id="${escapeHtml(site.id)}">
+                    ${active ? '● ' : '○ '}${escapeHtml(site.name)}
+                    <span class="dropdown-item-id">${escapeHtml(site.id)}</span>
+                </div>
+            `;
+        });
+
+        // 分隔线 + 站点管理入口
+        html += '<div class="dropdown-divider"></div>';
+        html += '<div class="dropdown-item manage-link" data-page="sites">📁 站点管理</div>';
+
+        $siteDropdown.innerHTML = html;
+
+        // 绑定点击事件
+        $siteDropdown.querySelectorAll('[data-site-id]').forEach(el => {
+            el.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const siteId = el.dataset.siteId;
+                await setCurrentSite(siteId);
+                closeDropdown();
+            });
+        });
+
+        // 站点管理入口
+        const manageLink = $siteDropdown.querySelector('.manage-link');
+        if (manageLink) {
+            manageLink.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeDropdown();
+                loadPage('sites');
+            });
+        }
+    }
+
+    // ===== 下拉菜单开关 =====
+    function toggleDropdown(e) {
+        if (allSites.length === 0) return;
+        e.stopPropagation();
+        const isOpen = $siteDropdown.classList.contains('open');
+        if (isOpen) {
+            closeDropdown();
+        } else {
+            renderDropdown();
+            $siteDropdown.classList.add('open');
+        }
+    }
+
+    function closeDropdown() {
+        $siteDropdown.classList.remove('open');
+    }
+
+    // 点击页面其他地方关闭下拉
+    document.addEventListener('click', (e) => {
+        if (!$siteDropdown.contains(e.target) && e.target !== $siteBtn && !$siteBtn.contains(e.target)) {
+            closeDropdown();
+        }
+    });
 
     // ===== 加载页面 =====
     async function loadPage(pageId) {
@@ -31,6 +185,7 @@
         if (!page) return;
 
         currentPage = pageId;
+        closeDropdown();
 
         // 高亮导航
         $navItems.forEach(el => el.classList.toggle('active', el.dataset.page === pageId));
@@ -41,12 +196,12 @@
             const html = await resp.text();
             $content.innerHTML = html;
 
-            // 触发页面初始化（如果存在）
+            // 触发页面初始化
             if (window[`init_${pageId}`]) {
                 window[`init_${pageId}`]();
             }
         } catch {
-            // fallback: 占位提示
+            // fallback
             $content.innerHTML = `
                 <div class="page-placeholder">
                     <div class="placeholder-icon">${page.icon}</div>
@@ -64,16 +219,45 @@
         if (page) loadPage(page);
     }
 
+    // ===== 暴露给其他模块的 API =====
+    // sites.js 等可以通过 window.__app 访问
+    window.__app = {
+        setCurrentSite,
+        refreshSites,
+        getCurrentSite: () => currentSite,
+        getAllSites: () => allSites,
+        loadPage,
+    };
+
     // ===== 初始化 =====
-    function init() {
+    async function init() {
         // 绑定导航点击
         $navItems.forEach(el => el.addEventListener('click', handleNavClick));
+
+        // 顶部站点选择器点击
+        if ($siteBtn) {
+            $siteBtn.addEventListener('click', toggleDropdown);
+        }
+
+        // 加载数据
+        await loadSites();
+        const appState = await loadAppState();
+
+        // 恢复选中的站点
+        if (appState.activeSiteId) {
+            const site = allSites.find(s => s.id === appState.activeSiteId);
+            if (site) {
+                currentSite = site;
+            }
+        }
+
+        updateTopbar();
+        renderDropdown();
 
         // 默认页面
         loadPage('dashboard');
     }
 
-    // 等 DOM 就绪
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

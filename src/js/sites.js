@@ -45,6 +45,10 @@
     function render() {
         try {
             if (!els.list) { console.warn('[YolongCMS] render: sitesList not found'); return; }
+
+            // 获取当前活跃站点 ID
+            const activeSiteId = window.__app ? (window.__app.getCurrentSite() || {}).id : null;
+
             if (!sites.length) {
                 els.list.innerHTML = '';
                 if (els.empty) els.empty.style.display = 'flex';
@@ -54,10 +58,11 @@
 
             let html = '';
             sites.forEach((site, index) => {
+                const isActive = site.id === activeSiteId;
                 html += `
-                    <div class="site-card">
+                    <div class="site-card ${isActive ? 'active' : ''}">
                         <div class="site-info">
-                            <div class="site-name">${escapeHtml(site.name)}</div>
+                            <div class="site-name">${escapeHtml(site.name)} ${isActive ? '<span class="site-active-badge">当前</span>' : ''}</div>
                             <div class="site-meta">
                                 <span class="site-tag">${escapeHtml(site.id)}</span>
                                 <span class="site-detail">${escapeHtml(site.repo)}</span>
@@ -68,6 +73,7 @@
                             </div>
                         </div>
                         <div class="site-actions">
+                            ${isActive ? '' : '<button class="btn btn-primary-outline btn-sm" data-index="' + index + '" data-action="select">设为当前</button>'}
                             <button class="btn btn-danger-outline btn-sm" data-index="${index}" data-action="delete">删除</button>
                         </div>
                     </div>
@@ -78,6 +84,17 @@
             // 绑定删除事件
             els.list.querySelectorAll('[data-action="delete"]').forEach(btn => {
                 btn.addEventListener('click', () => deleteSite(parseInt(btn.dataset.index)));
+            });
+
+            // 绑定设为当前事件
+            els.list.querySelectorAll('[data-action="select"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const site = sites[parseInt(btn.dataset.index)];
+                    if (site && window.__app) {
+                        window.__app.setCurrentSite(site.id);
+                        render(); // 重新渲染更新高亮
+                    }
+                });
             });
         } catch (err) {
             console.error('[YolongCMS] render error:', err);
@@ -130,6 +147,8 @@
             await saveSites();
             // 添加成功后清除表单缓存
             formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
+            // 通知 app 刷新站点列表
+            if (window.__app) window.__app.refreshSites();
             render();
             closeModal();
             showToast('✅ 站点 "' + name + '" 已添加');
@@ -151,6 +170,8 @@
 
             sites.splice(index, 1);
             await saveSites();
+            // 通知 app 刷新站点列表
+            if (window.__app) window.__app.refreshSites();
             render();
             showToast('已移除站点 "' + site.name + '"，本地数据已保留');
         } catch (err) {

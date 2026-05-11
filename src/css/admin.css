@@ -528,3 +528,126 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
+
+/* ===== 顶部站点选择器下拉 ===== */
+.site-selector {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.topbar-site {
+    padding: 4px 8px;
+    border-radius: var(--radius-lg);
+    transition: background 0.15s;
+    font-size: 13px;
+}
+
+.topbar-site:hover {
+    background: var(--bg-hover);
+}
+
+.site-selector.no-site .topbar-site {
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.site-selector.no-site .topbar-site:hover {
+    background: transparent;
+}
+
+.site-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    min-width: 240px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    overflow: hidden;
+}
+
+.site-dropdown.open {
+    display: block;
+}
+
+.dropdown-item {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dropdown-item:hover {
+    background: var(--bg-hover);
+}
+
+.dropdown-item.active {
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.dropdown-item.disabled {
+    color: var(--text-muted);
+    cursor: default;
+}
+
+.dropdown-item.disabled:hover {
+    background: transparent;
+}
+
+.dropdown-item-id {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+}
+
+/* ===== 站点管理 - 当前站点标识 ===== */
+.site-card.active {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+}
+
+.site-active-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 1px 8px;
+    border-radius: 4px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ===== 按钮变体 ===== */
+.btn-primary-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-primary-outline:hover {
+    background: var(--accent);
+    color: #fff;
+}
