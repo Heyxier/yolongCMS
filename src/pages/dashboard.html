@@ -1,5 +1,69 @@
-<div class="page-placeholder">
-    <div class="placeholder-icon">📊</div>
-    <h2>仪表盘</h2>
-    <p>站点概览和统计数据将显示在这里</p>
+<!-- 仪表盘 - 站点概览 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>📊 仪表盘</h2>
+        <p class="page-subtitle" id="dashboardSubtitle">站点概览</p>
+    </div>
+</div>
+
+<!-- 未选择站点提示 -->
+<div class="dashboard-empty" id="dashboardEmpty" style="display:none;">
+    <div class="placeholder-icon">📁</div>
+    <h3>请先选择一个站点</h3>
+    <p>点击顶部栏的站点名称选择当前要管理的站点</p>
+</div>
+
+<!-- 站点详情 -->
+<div id="dashboardContent" style="display:none;">
+    <!-- 信息卡片行 -->
+    <div class="dashboard-cards">
+        <div class="stat-card">
+            <div class="stat-label">当前站点</div>
+            <div class="stat-value" id="dashSiteName">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">分支</div>
+            <div class="stat-value" id="dashBranch">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">待提交</div>
+            <div class="stat-value" id="dashPending">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">远程进度</div>
+            <div class="stat-value" id="dashAheadBehind">—</div>
+        </div>
+    </div>
+
+    <!-- 仓库详情 -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>📦 仓库</h3>
+        </div>
+        <div class="repo-detail">
+            <div class="repo-row">
+                <span class="repo-label">仓库地址</span>
+                <span class="repo-value" id="dashRepoUrl">—</span>
+            </div>
+            <div class="repo-row">
+                <span class="repo-label">本地路径</span>
+                <span class="repo-value" id="dashRepoPath">—</span>
+            </div>
+            <div class="repo-row">
+                <span class="repo-label">API 服务器</span>
+                <span class="repo-value" id="dashServerUrl">—</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近提交 -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>🕒 最近提交</h3>
+            <span class="section-badge" id="dashLogCount">0 条</span>
+        </div>
+        <div class="log-list" id="dashLogList">
+            <div class="log-empty">暂无提交记录</div>
+        </div>
+    </div>
 </div>

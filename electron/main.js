@@ -4,6 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const simpleGit = require('simple-git');
 
+// 服务层
+const gitService = require('../services/git-service');
+const mdService = require('../services/md-service');
+const ymlService = require('../services/yml-service');
+const serverService = require('../services/server-service');
+
 // ===== 路径常量 =====
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SITES_FILE = path.join(DATA_DIR, 'sites.json');
@@ -106,6 +112,53 @@ function registerIpcHandlers() {
         } catch (err) {
             return { success: false, error: err.message || '克隆失败' };
         }
+    });
+
+    // ===== Git 服务 =====
+    ipcMain.handle('git:pull', async (_event, repoDir) => {
+        return await gitService.pull(repoDir);
+    });
+    ipcMain.handle('git:status', async (_event, repoDir) => {
+        return await gitService.status(repoDir);
+    });
+    ipcMain.handle('git:commit', async (_event, repoDir, message) => {
+        return await gitService.commit(repoDir, message);
+    });
+    ipcMain.handle('git:push', async (_event, repoDir) => {
+        return await gitService.push(repoDir);
+    });
+    ipcMain.handle('git:log', async (_event, repoDir, maxCount) => {
+        return await gitService.log(repoDir, maxCount);
+    });
+
+    // ===== Markdown 服务 =====
+    ipcMain.handle('md:read', (_event, filePath) => {
+        return mdService.read(filePath);
+    });
+    ipcMain.handle('md:write', (_event, filePath, data, content) => {
+        return mdService.write(filePath, data, content);
+    });
+    ipcMain.handle('md:list', (_event, dir) => {
+        return mdService.list(dir);
+    });
+    ipcMain.handle('md:remove', (_event, filePath) => {
+        return mdService.remove(filePath);
+    });
+
+    // ===== YAML 服务 =====
+    ipcMain.handle('yml:read', (_event, filePath) => {
+        return ymlService.read(filePath);
+    });
+    ipcMain.handle('yml:write', (_event, filePath, data) => {
+        return ymlService.write(filePath, data);
+    });
+
+    // ===== 服务器通信 =====
+    ipcMain.handle('server:messages', async (_event, serverUrl, siteId) => {
+        return await serverService.fetchMessages(serverUrl, siteId);
+    });
+    ipcMain.handle('server:health', async (_event, serverUrl) => {
+        return await serverService.healthCheck(serverUrl);
     });
 }
 

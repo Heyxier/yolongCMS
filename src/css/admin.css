@@ -651,3 +651,150 @@ html, body {
     background: var(--accent);
     color: #fff;
 }
+
+/* ===== 仪表盘 ===== */
+.dashboard-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.dashboard-empty .placeholder-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.dashboard-empty h3 {
+    font-size: 18px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.dashboard-empty p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.dashboard-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.section-header h3 {
+    font-size: 15px;
+    color: var(--text-primary);
+}
+
+.section-badge {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.repo-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.repo-row {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    padding: 6px 0;
+}
+
+.repo-label {
+    color: var(--text-muted);
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.repo-value {
+    color: var(--text-primary);
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.log-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    font-size: 13px;
+}
+
+.log-hash {
+    color: var(--accent);
+    font-family: monospace;
+    font-size: 11px;
+    min-width: 56px;
+}
+
+.log-msg {
+    flex: 1;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.log-date {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.log-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 24px 0;
+}

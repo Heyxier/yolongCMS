@@ -20,6 +20,35 @@ contextBridge.exposeInMainWorld('yolongcms', {
         cloneRepo: (repoUrl, siteId, branch) => ipcRenderer.invoke('sites:clone-repo', { repoUrl, siteId, branch }),
     },
 
+    // ===== Git 服务 =====
+    git: {
+        pull: (repoDir) => ipcRenderer.invoke('git:pull', repoDir),
+        status: (repoDir) => ipcRenderer.invoke('git:status', repoDir),
+        commit: (repoDir, message) => ipcRenderer.invoke('git:commit', repoDir, message),
+        push: (repoDir) => ipcRenderer.invoke('git:push', repoDir),
+        log: (repoDir, maxCount) => ipcRenderer.invoke('git:log', repoDir, maxCount),
+    },
+
+    // ===== Markdown 服务 =====
+    md: {
+        read: (filePath) => ipcRenderer.invoke('md:read', filePath),
+        write: (filePath, data, content) => ipcRenderer.invoke('md:write', filePath, data, content),
+        list: (dir) => ipcRenderer.invoke('md:list', dir),
+        remove: (filePath) => ipcRenderer.invoke('md:remove', filePath),
+    },
+
+    // ===== YAML 服务 =====
+    yml: {
+        read: (filePath) => ipcRenderer.invoke('yml:read', filePath),
+        write: (filePath, data) => ipcRenderer.invoke('yml:write', filePath, data),
+    },
+
+    // ===== 服务器通信 =====
+    server: {
+        messages: (serverUrl, siteId) => ipcRenderer.invoke('server:messages', serverUrl, siteId),
+        health: (serverUrl) => ipcRenderer.invoke('server:health', serverUrl),
+    },
+
     // IPC 通信桥
     send: (channel, data) => ipcRenderer.send(channel, data),
     invoke: (channel, data) => ipcRenderer.invoke(channel, data),
