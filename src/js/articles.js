@@ -135,49 +135,95 @@
         });
     }
 
-    // ===== 图片选择弹窗 =====
+    // ===== 图片选择弹窗（支持文件夹浏览） =====
     let imagePickerCallback = null;
+    let pickerCurrentDir = '';  // 相对路径，如 '' 或 'products' 或 'news'
 
     async function openImagePicker(callback) {
         imagePickerCallback = callback;
+        pickerCurrentDir = '';
         const $modal = document.getElementById('imagePickerModal');
         if ($modal) {
             $modal.style.display = 'flex';
-            loadPickerImages();
+            loadPickerImages('');
         } else {
-            // 没有图片选择弹窗，回退到 prompt
             const path = prompt('输入图片路径（例如: /images/news/photo.jpg）');
             if (path && path.trim()) callback(path.trim());
         }
     }
 
     function closeImagePicker() {
-        const $modal = document.getElementById('imagePickerModal');
-        if ($modal) $modal.style.display = 'none';
+        document.getElementById('imagePickerModal').style.display = 'none';
         imagePickerCallback = null;
+        pickerCurrentDir = '';
     }
 
-    async function loadPickerImages() {
+    async function loadPickerImages(subDir) {
         const site = getActiveSite();
         if (!site) return;
+
+        pickerCurrentDir = subDir || '';
+
         const $list = document.getElementById('pickerImageList');
+        const $nav = document.getElementById('pickerNav');
         if (!$list) return;
+
         try {
-            const r = await window.yolongcms.images.list(site.id, 'news');
+            const r = await window.yolongcms.images.list(site.id, subDir || '');
             let html = '';
+
+            // 文件夹导航
+            if ($nav) {
+                const breadcrumbs = buildPickerBreadcrumbs(subDir || '');
+                $nav.innerHTML = breadcrumbs;
+                // 绑定面包屑点击（事件委托）
+                $nav.querySelectorAll('.picker-nav-link').forEach(el => {
+                    el.addEventListener('click', () => {
+                        loadPickerImages(el.dataset.dir || '');
+                    });
+                });
+            }
+
+            // 显示子目录
+            if (r.success && r.subdirs && r.subdirs.length) {
+                r.subdirs.forEach(d => {
+                    const dirPath = subDir ? subDir + '/' + d.name : d.name;
+                    html += '<div class="picker-folder" data-dir="' + escapeHtml(dirPath) + '">';
+                    html += '  <span class="picker-folder-icon">📁</span>';
+                    html += '  <span>' + escapeHtml(d.name) + '</span>';
+                    html += '</div>';
+                });
+            }
+
+            // 显示图片文件
             if (r.success && r.files && r.files.length) {
                 r.files.forEach(f => {
-                    const relPath = '/images/news/' + f.name;
+                    const relPath = '/images/' + (subDir ? subDir + '/' : '') + f.name;
                     html += '<div class="picker-image-item" data-path="' + escapeHtml(relPath) + '">';
-                    html += '  <img src="file://' + escapeHtml(f.filePath) + '" loading="lazy">';
+                    html += '  <div class="picker-img-wrap"><img src="file://' + escapeHtml(f.filePath) + '" loading="lazy"></div>';
                     html += '  <span>' + escapeHtml(f.name) + '</span>';
                     html += '</div>';
                 });
-            } else {
-                html = '<div class="picker-empty">暂无图片，请先上传</div>';
             }
+
+            if (!html) {
+                html = '<div class="picker-empty">📂 此文件夹为空</div>';
+            }
+
             $list.innerHTML = html;
 
+            // 绑定文件夹点击
+            $list.querySelectorAll('.picker-folder').forEach(el => {
+                el.addEventListener('dblclick', () => {
+                    loadPickerImages(el.dataset.dir);
+                });
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.picker-folder, .picker-image-item').forEach(i => i.classList.remove('selected'));
+                    el.classList.add('selected');
+                });
+            });
+
+            // 绑定图片点击
             $list.querySelectorAll('.picker-image-item').forEach(el => {
                 el.addEventListener('dblclick', () => {
                     const path = el.dataset.path;
@@ -185,13 +231,29 @@
                     closeImagePicker();
                 });
                 el.addEventListener('click', () => {
-                    document.querySelectorAll('.picker-image-item').forEach(i => i.classList.remove('selected'));
+                    document.querySelectorAll('.picker-folder, .picker-image-item').forEach(i => i.classList.remove('selected'));
                     el.classList.add('selected');
                 });
             });
         } catch (err) {
             $list.innerHTML = '<div class="picker-empty">加载失败: ' + err.message + '</div>';
         }
+    }
+
+    function buildPickerBreadcrumbs(subDir) {
+        if (!subDir) return '<span class="picker-nav-root">📁 images/</span>';
+        const parts = subDir.split('/');
+        let html = '<span class="picker-nav-link" data-dir="">📁 images/</span>';
+        let path = '';
+        parts.forEach((p, i) => {
+            path = path ? path + '/' + p : p;
+            if (i === parts.length - 1) {
+                html += '<span class="picker-nav-sep"> / </span><span class="picker-nav-current">' + escapeHtml(p) + '</span>';
+            } else {
+                html += '<span class="picker-nav-sep"> / </span><span class="picker-nav-link" data-dir="' + escapeHtml(path) + '">' + escapeHtml(p) + '</span>';
+            }
+        });
+        return html;
     }
     async function loadArticles() {
         currentSite = getActiveSite();
