@@ -116,19 +116,24 @@ function registerIpcHandlers() {
 
     // ===== Git 服务 =====
     ipcMain.handle('git:pull', async (_event, repoDir) => {
-        return await gitService.pull(repoDir);
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        return await gitService.pull(fullPath);
     });
     ipcMain.handle('git:status', async (_event, repoDir) => {
-        return await gitService.status(repoDir);
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        return await gitService.status(fullPath);
     });
     ipcMain.handle('git:commit', async (_event, repoDir, message) => {
-        return await gitService.commit(repoDir, message);
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        return await gitService.commit(fullPath, message);
     });
     ipcMain.handle('git:push', async (_event, repoDir) => {
-        return await gitService.push(repoDir);
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        return await gitService.push(fullPath);
     });
     ipcMain.handle('git:log', async (_event, repoDir, maxCount) => {
-        return await gitService.log(repoDir, maxCount);
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        return await gitService.log(fullPath, maxCount);
     });
 
     // ===== Markdown 服务 =====

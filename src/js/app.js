@@ -221,28 +221,22 @@
 
     // ===== 服务器状态检测 =====
     let healthCheckTimer = null;
-    const SERVER_HEALTH_URL = 'https://api.yolongtec.com/health';
 
     async function checkServerStatus() {
         const $statusDot = document.querySelector('.status-dot');
         const $statusText = document.querySelector('.status-text');
         if (!$statusDot) return;
 
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 5000);
-            const resp = await fetch(SERVER_HEALTH_URL, {
-                signal: controller.signal,
-                cache: 'no-cache',
-            });
-            clearTimeout(timeout);
-            if (resp.ok) {
+        if (window.yolongcms && window.yolongcms.server) {
+            const result = await window.yolongcms.server.health();
+            if (result.success) {
                 $statusDot.className = 'status-dot online';
                 if ($statusText) $statusText.textContent = '服务器在线';
             } else {
-                throw new Error('Not OK');
+                $statusDot.className = 'status-dot offline';
+                if ($statusText) $statusText.textContent = '服务器离线';
             }
-        } catch {
+        } else {
             $statusDot.className = 'status-dot offline';
             if ($statusText) $statusText.textContent = '服务器离线';
         }
