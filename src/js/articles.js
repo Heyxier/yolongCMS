@@ -102,7 +102,19 @@
     function getRichContent() {
         const $content = document.getElementById('richContent');
         const $source = document.getElementById('afBody');
-        return isSourceMode ? $source.value : $content.innerHTML;
+        let html = isSourceMode ? $source.value : $content.innerHTML;
+        // 替换预览路径：移除 src="file://..."，将 data-src 提升为 src
+        html = html.replace(/<img[^>]*>/gi, function(match) {
+            // 如果有 data-src，用它替换 src
+            const dataSrc = match.match(/data-src="([^"]*)"/);
+            if (dataSrc) {
+                return match
+                    .replace(/ src="[^"]*"/, ' src="' + dataSrc[1] + '"')
+                    .replace(/ data-src="[^"]*"/, '');
+            }
+            return match;
+        });
+        return html;
     }
 
     function setRichContent(html) {
@@ -121,16 +133,37 @@
         const site = getActiveSite();
         if (!site) { showToast('请先选择一个站点'); return; }
 
-        openImagePicker((path) => {
-            const imgHtml = `<p><img src="${escapeHtml(path)}" alt="" style="max-width:100%;border-radius:6px;"></p>`;
-            const $content = document.getElementById('richContent');
+        // 先聚焦编辑器，保证后续插入不丢失
+        const $content = document.getElementById('richContent');
+        if (!isSourceMode) $content.focus();
+
+        openImagePicker((path, localPath) => {
+            // 编辑器中用 file:// 本地路径预览
+            const previewSrc = localPath ? 'file://' + localPath : escapeHtml(path);
+            // 保存时用相对路径
+            const saveSrc = escapeHtml(path);
+
+            // 插入双属性 img：本地预览 + 保存路径
+            const imgHtml = `<p><img src="${previewSrc}" data-src="${saveSrc}" alt="" style="max-width:100%;border-radius:6px;"></p>`;
 
             if (isSourceMode) {
                 const $source = document.getElementById('afBody');
                 $source.value += '\n' + imgHtml;
             } else {
-                $content.focus();
-                document.execCommand('insertHTML', false, imgHtml);
+                // 用 Selection API 代替废弃的 execCommand
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0 && $content.contains(sel.anchorNode)) {
+                    const range = sel.getRangeAt(0);
+                    range.deleteContents();
+                    const frag = range.createContextualFragment(imgHtml);
+                    range.insertNode(frag);
+                    range.collapse(false);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    // fallback: 追加到末尾
+                    $content.innerHTML += imgHtml;
+                }
             }
         });
     }
@@ -199,7 +232,7 @@
             if (r.success && r.files && r.files.length) {
                 r.files.forEach(f => {
                     const relPath = '/images/' + (subDir ? subDir + '/' : '') + f.name;
-                    html += '<div class="picker-image-item" data-path="' + escapeHtml(relPath) + '">';
+                    html += '<div class="picker-image-item" data-path="' + escapeHtml(relPath) + '" data-local="' + escapeHtml(f.filePath) + '">';
                     html += '  <div class="picker-img-wrap"><img src="file://' + escapeHtml(f.filePath) + '" loading="lazy"></div>';
                     html += '  <span>' + escapeHtml(f.name) + '</span>';
                     html += '</div>';
@@ -227,7 +260,8 @@
             $list.querySelectorAll('.picker-image-item').forEach(el => {
                 el.addEventListener('dblclick', () => {
                     const path = el.dataset.path;
-                    if (imagePickerCallback) imagePickerCallback(path);
+                    const local = el.dataset.local;
+                    if (imagePickerCallback) imagePickerCallback(path, local);
                     closeImagePicker();
                 });
                 el.addEventListener('click', () => {
@@ -472,7 +506,7 @@
         document.getElementById('pickerModalSelect')?.addEventListener('click', () => {
             const sel = document.querySelector('.picker-image-item.selected');
             if (sel && imagePickerCallback) {
-                imagePickerCallback(sel.dataset.path);
+                imagePickerCallback(sel.dataset.path, sel.dataset.local);
                 closeImagePicker();
             } else {
                 showToast('请先点击选择一张图片');
