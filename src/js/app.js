@@ -11,6 +11,7 @@
         images:     { title: '图片',     icon: '🖼️' },
         messages:   { title: '留言',     icon: '✉️' },
         publish:    { title: '发布',     icon: '🚀' },
+        logs:       { title: '日志',     icon: '📋' },
         sites:      { title: '站点管理', icon: '📁' },
     };
 
@@ -235,6 +236,11 @@
             } else {
                 $statusDot.className = 'status-dot offline';
                 if ($statusText) $statusText.textContent = '服务器离线';
+                // 首次启动时记录一次离线（不每次写日志）
+                if (!window._serverLoggedOffline) {
+                    window.yolongcms.log.append('warn', 'server', '服务器不可达: ' + (result.error || '未知'));
+                    window._serverLoggedOffline = true;
+                }
             }
         } else {
             $statusDot.className = 'status-dot offline';

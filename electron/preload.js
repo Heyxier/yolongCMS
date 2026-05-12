@@ -55,4 +55,11 @@ contextBridge.exposeInMainWorld('yolongcms', {
     on: (channel, callback) => {
         ipcRenderer.on(channel, (_event, ...args) => callback(...args));
     },
+
+    // ===== 操作日志 =====
+    log: {
+        append: (level, source, message, details) => ipcRenderer.invoke('log:append', level, source, message, details),
+        list: (filter) => ipcRenderer.invoke('log:list', filter),
+        clear: () => ipcRenderer.invoke('log:clear'),
+    },
 });

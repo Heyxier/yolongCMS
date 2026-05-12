@@ -798,3 +798,158 @@ html, body {
     text-align: center;
     padding: 24px 0;
 }
+
+/* ===== 日志页面 ===== */
+.log-filters {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-group label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.filter-select {
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    border-color: var(--accent);
+}
+
+.log-stats {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.log-table-wrap {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.log-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg-sidebar);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.log-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+.log-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.log-row:hover td {
+    background: var(--bg-hover);
+}
+
+.col-time {
+    white-space: nowrap;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    width: 160px;
+}
+
+.col-level { width: 60px; }
+.col-source { width: 60px; }
+.col-msg { min-width: 200px; }
+.col-detail { width: 60px; text-align: center; }
+
+/* 级别标签 */
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.badge-info {
+    background: #1a8cff22;
+    color: var(--accent);
+}
+
+.badge-warn {
+    background: #f59e0b22;
+    color: var(--warning);
+}
+
+.badge-error {
+    background: #ef444422;
+    color: var(--danger);
+}
+
+/* 来源标签 */
+.source-tag {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* 详情展开 */
+.detail-toggle {
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    user-select: none;
+}
+
+.detail-toggle:hover {
+    color: var(--accent-hover);
+}
+
+.detail-json {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin: 6px 0 0;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.detail-empty {
+    color: var(--text-muted);
+    font-size: 12px;
+}

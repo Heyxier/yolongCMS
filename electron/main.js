@@ -9,6 +9,7 @@ const gitService = require('../services/git-service');
 const mdService = require('../services/md-service');
 const ymlService = require('../services/yml-service');
 const serverService = require('../services/server-service');
+const logService = require('../services/log-service');
 
 // ===== 路径常量 =====
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -73,6 +74,7 @@ function registerIpcHandlers() {
     // 保存站点列表
     ipcMain.handle('sites:write', (_event, sites) => {
         writeSites(sites);
+        logService.append('info', 'sites', '站点列表已更新', { count: sites.length });
         return true;
     });
 
@@ -95,6 +97,7 @@ function registerIpcHandlers() {
     // 删除本地 repo 数据
     ipcMain.handle('sites:delete-repo', (_event, repoId) => {
         deleteRepo(repoId);
+        logService.append('info', 'sites', '已删除本地仓库', { repoId });
         return true;
     });
 
@@ -104,13 +107,16 @@ function registerIpcHandlers() {
         ensureDir(path.dirname(targetDir));
         if (fs.existsSync(targetDir)) {
             // 目录已存在 → 视为已克隆，返回成功
+            logService.append('info', 'sites', '仓库已存在，跳过克隆', { siteId, path: targetDir });
             return { success: true, path: targetDir, existing: true };
         }
         try {
             const git = simpleGit();
             await git.clone(repoUrl, targetDir, ['--branch', branch || 'main']);
+            logService.append('info', 'git', '仓库克隆成功', { siteId, repoUrl, branch: branch || 'main' });
             return { success: true, path: targetDir };
         } catch (err) {
+            logService.append('error', 'git', '仓库克隆失败: ' + (err.message || '未知错误'), { siteId, repoUrl, error: err.message });
             return { success: false, error: err.message || '克隆失败' };
         }
     });
@@ -118,7 +124,10 @@ function registerIpcHandlers() {
     // ===== Git 服务 =====
     ipcMain.handle('git:pull', async (_event, repoDir) => {
         const fullPath = path.join(REPOS_DIR, repoDir);
-        return await gitService.pull(fullPath);
+        const result = await gitService.pull(fullPath);
+        if (result.success) logService.append('info', 'git', '拉取成功', { repoDir });
+        else logService.append('warn', 'git', '拉取失败: ' + result.error, { repoDir, error: result.error });
+        return result;
     });
     ipcMain.handle('git:status', async (_event, repoDir) => {
         const fullPath = path.join(REPOS_DIR, repoDir);
@@ -126,11 +135,17 @@ function registerIpcHandlers() {
     });
     ipcMain.handle('git:commit', async (_event, repoDir, message) => {
         const fullPath = path.join(REPOS_DIR, repoDir);
-        return await gitService.commit(fullPath, message);
+        const result = await gitService.commit(fullPath, message);
+        if (result.success) logService.append('info', 'git', '提交成功', { repoDir, message, hash: result.commitHash });
+        else logService.append('error', 'git', '提交失败: ' + result.error, { repoDir, message, error: result.error });
+        return result;
     });
     ipcMain.handle('git:push', async (_event, repoDir) => {
         const fullPath = path.join(REPOS_DIR, repoDir);
-        return await gitService.push(fullPath);
+        const result = await gitService.push(fullPath);
+        if (result.success) logService.append('info', 'git', '推送成功', { repoDir });
+        else logService.append('error', 'git', '推送失败: ' + result.error, { repoDir, error: result.error });
+        return result;
     });
     ipcMain.handle('git:log', async (_event, repoDir, maxCount) => {
         const fullPath = path.join(REPOS_DIR, repoDir);
@@ -166,6 +181,18 @@ function registerIpcHandlers() {
     ipcMain.handle('server:health', async (_event, serverUrl) => {
         return await serverService.healthCheck(serverUrl);
     });
+
+    // ===== 日志服务 =====
+    ipcMain.handle('log:append', (_event, level, source, message, details) => {
+        return logService.append(level, source, message, details);
+    });
+    ipcMain.handle('log:list', (_event, filter) => {
+        return logService.list(filter);
+    });
+    ipcMain.handle('log:clear', () => {
+        logService.append('info', 'system', '日志已清空');
+        return logService.clear();
+    });
 }
 
 let mainWindow = null;
@@ -191,6 +218,7 @@ function createWindow() {
 app.whenReady().then(() => {
     registerIpcHandlers();
     createWindow();
+    logService.append('info', 'system', 'YolongCMS 桌面应用已启动', { version: app.getVersion() || 'dev' });
 });
 
 app.on('window-all-closed', () => {

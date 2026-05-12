@@ -1,0 +1,54 @@
+<!-- 日志查看 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>📋 操作日志</h2>
+        <p class="page-subtitle" id="logsSubtitle">系统操作记录</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" id="btnRefreshLogs">🔄 刷新</button>
+        <button class="btn btn-danger-outline" id="btnClearLogs">🗑️ 清空</button>
+    </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="log-filters">
+    <div class="filter-group">
+        <label>级别</label>
+        <select class="filter-select" id="filterLevel">
+            <option value="">全部</option>
+            <option value="info">信息</option>
+            <option value="warn">警告</option>
+            <option value="error">错误</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>来源</label>
+        <select class="filter-select" id="filterSource">
+            <option value="">全部</option>
+            <option value="system">系统</option>
+            <option value="sites">站点</option>
+            <option value="git">Git</option>
+            <option value="server">服务器</option>
+            <option value="app">应用</option>
+        </select>
+    </div>
+    <div class="log-stats" id="logStats">共 0 条</div>
+</div>
+
+<!-- 日志列表 -->
+<div class="log-table-wrap">
+    <table class="log-table" id="logTable">
+        <thead>
+            <tr>
+                <th class="col-time">时间</th>
+                <th class="col-level">级别</th>
+                <th class="col-source">来源</th>
+                <th class="col-msg">消息</th>
+                <th class="col-detail">详情</th>
+            </tr>
+        </thead>
+        <tbody id="logBody">
+            <tr><td colspan="5" class="log-empty">暂无日志记录</td></tr>
+        </tbody>
+    </table>
+</div>
