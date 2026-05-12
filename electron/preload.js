@@ -26,6 +26,7 @@ contextBridge.exposeInMainWorld('yolongcms', {
         status: (repoDir) => ipcRenderer.invoke('git:status', repoDir),
         commit: (repoDir, message) => ipcRenderer.invoke('git:commit', repoDir, message),
         push: (repoDir) => ipcRenderer.invoke('git:push', repoDir),
+        pushAuth: (repoDir) => ipcRenderer.invoke('git:push-auth', repoDir),
         log: (repoDir, maxCount) => ipcRenderer.invoke('git:log', repoDir, maxCount),
     },
 
@@ -92,5 +93,13 @@ contextBridge.exposeInMainWorld('yolongcms', {
     // ===== 分类管理 =====
     categories: {
         rename: (siteId, oldName, newName) => ipcRenderer.invoke('categories:rename', siteId, oldName, newName),
+    },
+
+    // ===== 用户配置 =====
+    config: {
+        read: () => ipcRenderer.invoke('config:read'),
+        write: (data) => ipcRenderer.invoke('config:write', data),
+        get: (key) => ipcRenderer.invoke('config:get', key),
+        set: (key, value) => ipcRenderer.invoke('config:set', key, value),
     },
 });

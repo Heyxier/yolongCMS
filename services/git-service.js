@@ -2,6 +2,7 @@
 // 基于 simple-git，所有操作在 main process 中执行
 const simpleGit = require('simple-git');
 const fs = require('fs');
+const path = require('path');
 
 /**
  * git pull — 拉取远程最新代码
@@ -90,6 +91,53 @@ async function push(repoDir) {
 }
 
 /**
+ * git push with GitHub Token — 使用 Personal Access Token 推送
+ * 避免 git 提示输入密码导致进程挂起
+ * @param {string} repoDir - repos/{siteId} 目录
+ * @param {string} token - GitHub Personal Access Token
+ * @returns {{ success: boolean, message?: string, error?: string }}
+ */
+async function pushWithToken(repoDir, token) {
+    let git;
+    let originalUrl;
+    try {
+        git = simpleGit(repoDir);
+        const remotes = await git.getRemotes(true);
+        const origin = remotes.find(r => r.name === 'origin');
+        if (!origin) throw new Error('未配置远程仓库 "origin"');
+
+        originalUrl = origin.refs.push || origin.refs.fetch;
+
+        // 提取仓库路径 (user/repo)
+        let repoPath = '';
+        if (originalUrl.startsWith('https://')) {
+            repoPath = originalUrl.replace('https://github.com/', '').replace(/\.git$/, '');
+        } else if (originalUrl.startsWith('git@')) {
+            repoPath = originalUrl.replace('git@github.com:', '').replace(/\.git$/, '');
+        } else {
+            throw new Error('不支持的远程仓库协议: ' + originalUrl);
+        }
+
+        // GitHub 推荐的 Token 认证格式: https://oauth2:TOKEN@github.com/user/repo.git
+        const authUrl = `https://oauth2:${token}@github.com/${repoPath}.git`;
+        await git.remote(['set-url', 'origin', authUrl]);
+
+        await git.push();
+        return { success: true, message: '推送成功' };
+    } catch (err) {
+        return { success: false, error: err.message || '推送失败' };
+    } finally {
+        if (git && originalUrl) {
+            try {
+                await git.remote(['set-url', 'origin', originalUrl]);
+            } catch {
+                // 恢复失败不阻断主流程
+            }
+        }
+    }
+}
+
+/**
  * git log — 获取提交历史
  * @param {string} repoDir
  * @param {number} [maxCount=20]
@@ -113,4 +161,4 @@ async function log(repoDir, maxCount = 20) {
     }
 }
 
-module.exports = { pull, status, commit, push, log };
+module.exports = { pull, status, commit, push, pushWithToken, log };

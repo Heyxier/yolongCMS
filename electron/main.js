@@ -10,6 +10,7 @@ const mdService = require('../services/md-service');
 const ymlService = require('../services/yml-service');
 const serverService = require('../services/server-service');
 const logService = require('../services/log-service');
+const configService = require('../services/config-service');
 
 // ===== 路径常量 =====
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -89,6 +90,20 @@ function registerIpcHandlers() {
         return true;
     });
 
+    // ===== 用户配置 =====
+    ipcMain.handle('config:read', () => {
+        return configService.readAll();
+    });
+    ipcMain.handle('config:write', (_event, data) => {
+        return configService.writeAll(data);
+    });
+    ipcMain.handle('config:get', (_event, key) => {
+        return configService.get(key);
+    });
+    ipcMain.handle('config:set', (_event, key, value) => {
+        return configService.set(key, value);
+    });
+
     // 读取本地 repos 目录列表
     ipcMain.handle('sites:list-repos', () => {
         return listRepos();
@@ -145,6 +160,17 @@ function registerIpcHandlers() {
         const result = await gitService.push(fullPath);
         if (result.success) logService.append('info', 'git', '推送成功', { repoDir });
         else logService.append('error', 'git', '推送失败: ' + result.error, { repoDir, error: result.error });
+        return result;
+    });
+    ipcMain.handle('git:push-auth', async (_event, repoDir) => {
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        const token = configService.get('githubToken');
+        if (!token) {
+            return { success: false, error: '未配置 GitHub Token，请在设置中配置' };
+        }
+        const result = await gitService.pushWithToken(fullPath, token);
+        if (result.success) logService.append('info', 'git', '认证推送成功', { repoDir });
+        else logService.append('error', 'git', '认证推送失败: ' + result.error, { repoDir, error: result.error });
         return result;
     });
     ipcMain.handle('git:log', async (_event, repoDir, maxCount) => {

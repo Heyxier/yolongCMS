@@ -1436,3 +1436,222 @@ html, body {
     border: 1px solid #1a8cff33;
     color: var(--accent);
 }
+
+/* ===== 发布页面：加载遮罩 ===== */
+.pub-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 17, 23, 0.85);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+.pub-overlay-content {
+    text-align: center;
+    max-width: 420px;
+    padding: 40px;
+}
+
+.pub-overlay-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: pub-spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes pub-spin {
+    to { transform: rotate(360deg); }
+}
+
+.pub-overlay-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.pub-overlay-progress {
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.pub-overlay-detail {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+/* ===== 设置页面 ===== */
+.settings-section {
+    margin-bottom: 24px;
+}
+
+.settings-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.settings-section-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.settings-welcome {
+    margin-bottom: 24px;
+}
+
+.settings-welcome-card {
+    background: linear-gradient(135deg, var(--accent-bg), transparent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+}
+
+.settings-welcome-card .sw-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.settings-welcome-card h2 {
+    font-size: 20px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.settings-welcome-card p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.settings-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+}
+
+.settings-card .form-group {
+    margin-bottom: 16px;
+}
+
+.settings-card .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.settings-link {
+    color: var(--accent);
+    text-decoration: none;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+.settings-link:hover {
+    text-decoration: underline;
+}
+
+.input-with-btn {
+    display: flex;
+    gap: 6px;
+}
+
+.input-with-btn .form-input {
+    flex: 1;
+}
+
+.input-with-btn .btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.settings-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.settings-result {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.settings-result-success {
+    background: #22c55e15;
+    border: 1px solid #22c55e33;
+    color: var(--success);
+}
+
+.settings-result-error {
+    background: #ef444415;
+    border: 1px solid #ef444433;
+    color: var(--danger);
+}
+
+.settings-result-info {
+    background: #1a8cff15;
+    border: 1px solid #1a8cff33;
+    color: var(--accent);
+}
+
+.about-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.about-row:last-child {
+    border-bottom: none;
+}
+
+.about-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.about-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.about-path {
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+code {
+    background: var(--bg-primary);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+.text-danger {
+    color: var(--danger);
+}

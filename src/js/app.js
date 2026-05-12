@@ -13,6 +13,7 @@
         publish:    { title: '发布',     icon: '🚀' },
         logs:       { title: '日志',     icon: '📋' },
         sites:      { title: '站点管理', icon: '📁' },
+        settings:   { title: '设置',     icon: '⚙️' },
     };
 
     // ===== 元素引用 =====
@@ -272,12 +273,29 @@
             $siteBtn.addEventListener('click', toggleDropdown);
         }
 
+        // 设置按钮（顶部栏右侧齿轮）
+        const $settingsBtn = document.getElementById('btnSettings');
+        if ($settingsBtn) {
+            $settingsBtn.addEventListener('click', () => loadPage('settings'));
+        }
+
         // 加载数据
         await loadSites();
         const appState = await loadAppState();
 
+        // 检查首次启动 — 未配置则跳转到设置向导
+        let needsSetup = false;
+        try {
+            if (window.yolongcms && window.yolongcms.config) {
+                const config = await window.yolongcms.config.read();
+                needsSetup = !config || !config.setupComplete;
+            }
+        } catch {
+            needsSetup = false;
+        }
+
         // 恢复选中的站点
-        if (appState.activeSiteId) {
+        if (!needsSetup && appState.activeSiteId) {
             const site = allSites.find(s => s.id === appState.activeSiteId);
             if (site) {
                 currentSite = site;
@@ -289,11 +307,14 @@
 
         // 检测服务器状态
         checkServerStatus();
-        // 每 60 秒重新检测
         healthCheckTimer = setInterval(checkServerStatus, 60000);
 
-        // 默认页面
-        loadPage('dashboard');
+        // 默认页面：首次启动 → 设置向导，否则 → 仪表盘
+        if (needsSetup) {
+            loadPage('settings');
+        } else {
+            loadPage('dashboard');
+        }
     }
 
     if (document.readyState === 'loading') {
