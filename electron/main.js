@@ -214,6 +214,184 @@ function registerIpcHandlers() {
         return { success: true };
     });
 
+    // ===== 产品 Excel 导入导出 =====
+    const XLSX = require('xlsx');
+
+    // 模板列定义
+    const TEMPLATE_COLS = [
+        { key: 'model',      title: '型号*',       width: 18 },
+        { key: 'name',       title: '名称*',       width: 30 },
+        { key: 'category',   title: '分类*',       width: 14 },
+        { key: 'voltage',    title: '电压',        width: 10 },
+        { key: 'torque',     title: '扭矩',        width: 12 },
+        { key: 'motorType',  title: '电机类型',    width: 12 },
+        { key: 'image',      title: '图片路径',    width: 30 },
+        { key: 'description',title: '简介描述',    width: 25 },
+        { key: 'features',   title: '特性(|分隔)', width: 30 },
+        { key: 'accessories',title: '配件(|分隔)', width: 30 },
+        { key: 'status',     title: '上架',         width: 8 },
+    ];
+
+    // 示例数据
+    const TEMPLATE_EXAMPLE = {
+        model: 'ZPT-CD-12252',
+        name: '12V 25Nm Drill Driver',
+        category: 'drill',
+        voltage: '12V',
+        torque: '25 N·m',
+        motorType: 'brushed',
+        image: '/images/products/drill/ZPT-CD-12252.jpg',
+        description: 'Compact design, ideal for home and professional use',
+        features: 'Two-speed gearbox|Auto spindle lock|LED work light',
+        accessories: '2pc 2.0Ah Battery|1pc Quick Charger',
+        status: 'TRUE',
+    };
+
+    function generateTemplateBuffer() {
+        const wb = XLSX.utils.book_new();
+
+        // 说明页
+        const notes = [
+            ['YolongCMS 产品批量导入模板'],
+            [''],
+            ['填写说明：'],
+            ['  1. 标 * 的列为必填，不可为空'],
+            ['  2. "特性"和"配件"如有多个值，用 | (竖线) 分隔'],
+            ['  3. "上架"列填 TRUE 或 FALSE（不填默认为 TRUE）'],
+            ['  4. "电机类型"填 brushed(有刷) 或 brushless(无刷)'],
+            ['  5. 请勿修改列标题行'],
+            [''],
+            ['如有问题，请查阅产品管理 → 帮助文档'],
+        ];
+        const wsNotes = XLSX.utils.aoa_to_sheet(notes);
+        XLSX.utils.book_append_sheet(wb, wsNotes, '说明');
+
+        // 数据列 + 示例行
+        const header = TEMPLATE_COLS.map(c => c.title);
+        const exampleRow = TEMPLATE_COLS.map(c => TEMPLATE_EXAMPLE[c.key]);
+        const data = [header, exampleRow];
+        const wsData = XLSX.utils.aoa_to_sheet(data);
+
+        // 设置列宽
+        wsData['!cols'] = TEMPLATE_COLS.map(c => ({ wch: c.width }));
+
+        XLSX.utils.book_append_sheet(wb, wsData, '产品数据');
+        return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    }
+
+    ipcMain.handle('products:export-template', async () => {
+        const buffer = generateTemplateBuffer();
+        const result = await dialog.showSaveDialog(mainWindow, {
+            title: '保存导入模板',
+            defaultPath: 'yolongcms-产品导入模板.xlsx',
+            filters: [{ name: 'Excel 文件', extensions: ['xlsx'] }],
+        });
+        if (result.canceled || !result.filePath) {
+            return { success: false, canceled: true };
+        }
+        fs.writeFileSync(result.filePath, buffer);
+        logService.append('info', 'sites', '已下载产品导入模板', { path: result.filePath });
+        return { success: true, path: result.filePath };
+    });
+
+    ipcMain.handle('products:import-excel', async (_event, siteId) => {
+        const result = await dialog.showOpenDialog(mainWindow, {
+            title: '选择产品导入文件',
+            properties: ['openFile'],
+            filters: [{ name: 'Excel 文件', extensions: ['xlsx', 'xls'] }],
+        });
+        if (result.canceled || !result.filePaths.length) {
+            return { success: false, canceled: true };
+        }
+
+        const filePath = result.filePaths[0];
+        const wb = XLSX.readFile(filePath);
+
+        // 读取第一个数据表（跳过"说明"表）
+        let sheetName = null;
+        wb.SheetNames.forEach(name => {
+            if (name !== '说明' && !sheetName) sheetName = name;
+        });
+        if (!sheetName) return { success: false, error: '未找到数据表' };
+
+        const ws = wb.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows || rows.length === 0) {
+            return { success: false, error: '导入文件为空' };
+        }
+
+        const results = { success: 0, failed: 0, errors: [] };
+        const productsDir = path.join(REPOS_DIR, siteId, '_products');
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowNum = i + 2; // +2 because header is row 1, data starts at row 2
+
+            try {
+                const model = String(row['型号*'] || row['型号'] || '').trim();
+                const name = String(row['名称*'] || row['名称'] || '').trim();
+                const category = String(row['分类*'] || row['分类'] || '').trim();
+
+                // 校验必填
+                if (!model) { results.failed++; results.errors.push(`第${rowNum}行: 型号为空`); continue; }
+                if (!name) { results.failed++; results.errors.push(`第${rowNum}行: 名称为空`); continue; }
+                if (!category) { results.failed++; results.errors.push(`第${rowNum}行: 分类为空`); continue; }
+
+                // 解析字段
+                const data = {
+                    model,
+                    name,
+                    category,
+                    voltage: String(row['电压'] || '').trim(),
+                    torque: String(row['扭矩'] || '').trim(),
+                    motorType: row['电机类型'] ? String(row['电机类型']).trim().toLowerCase() : '',
+                    image: String(row['图片路径'] || row['image'] || '').trim(),
+                    description: String(row['简介描述'] || row['description'] || '').trim(),
+                    features: [],
+                    accessories: [],
+                    status: true,
+                };
+
+                // 解析竖线分隔
+                const feats = String(row['特性(|分隔)'] || row['特性'] || row['features'] || '').trim();
+                if (feats) data.features = feats.split('|').map(s => s.trim()).filter(Boolean);
+
+                const accs = String(row['配件(|分隔)'] || row['配件'] || row['accessories'] || '').trim();
+                if (accs) data.accessories = accs.split('|').map(s => s.trim()).filter(Boolean);
+
+                // 状态
+                const statusVal = String(row['上架'] || 'TRUE').trim().toUpperCase();
+                data.status = statusVal !== 'FALSE' && statusVal !== '0';
+
+                // 写文件
+                const filename = model + '.md';
+                const filePath = path.join(productsDir, filename);
+                ensureDir(productsDir);
+
+                // 检查重名
+                if (fs.existsSync(filePath)) {
+                    results.failed++;
+                    results.errors.push(`第${rowNum}行: 型号 "${model}" 已存在，跳过`);
+                    continue;
+                }
+
+                const md = grayMatter.stringify('', data);
+                fs.writeFileSync(filePath, md, 'utf-8');
+                results.success++;
+            } catch (err) {
+                results.failed++;
+                results.errors.push(`第${rowNum}行: ${err.message}`);
+            }
+        }
+
+        logService.append('info', 'sites',
+            `批量导入完成: ${results.success} 成功, ${results.failed} 失败`,
+            { siteId, file: filePath, ...results });
+
+        return { success: true, ...results };
+    });
+
     // ===== 文章管理（同产品结构） =====
     ipcMain.handle('articles:list', (_event, siteId) => {
         const dir = path.join(REPOS_DIR, siteId, '_articles');

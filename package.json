@@ -1,16 +1,17 @@
 {
   "name": "yolongcms-desktop",
   "version": "0.1.0",
-  "description": "YolongCMS - \u591a\u7f51\u7ad9\u7edf\u4e00\u5185\u5bb9\u7ba1\u7406\u684c\u9762\u5e94\u7528",
+  "description": "YolongCMS - 多网站统一内容管理桌面应用",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev"
   },
   "dependencies": {
-    "simple-git": "^3.27.0",
     "gray-matter": "^4.0.3",
-    "marked": "^14.0.0"
+    "marked": "^14.0.0",
+    "simple-git": "^3.27.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "electron": "^33.0.0"

@@ -69,6 +69,8 @@ contextBridge.exposeInMainWorld('yolongcms', {
         read: (siteId, filename) => ipcRenderer.invoke('products:read', siteId, filename),
         write: (siteId, filename, data, content) => ipcRenderer.invoke('products:write', siteId, filename, data, content),
         remove: (siteId, filename) => ipcRenderer.invoke('products:remove', siteId, filename),
+        exportTemplate: () => ipcRenderer.invoke('products:export-template'),
+        importExcel: (siteId) => ipcRenderer.invoke('products:import-excel', siteId),
     },
 
     // ===== 文章管理 =====

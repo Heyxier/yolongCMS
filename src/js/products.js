@@ -313,9 +313,56 @@
         document.getElementById('pfStatusText').textContent = checked ? '上架' : '下架';
     }
 
+    // ===== 下载 Excel 模板 =====
+    async function downloadTemplate() {
+        try {
+            const result = await window.yolongcms.products.exportTemplate();
+            if (result.success) {
+                showToast('✅ 模板已保存');
+            } else if (!result.canceled) {
+                showToast('❌ 下载失败: ' + (result.error || '未知错误'));
+            }
+        } catch (err) {
+            showToast('❌ 下载失败: ' + err.message);
+        }
+    }
+
+    // ===== 导入 Excel =====
+    async function importExcel() {
+        currentSite = getActiveSite();
+        if (!currentSite) { showToast('请先选择一个站点'); return; }
+
+        try {
+            const result = await window.yolongcms.products.importExcel(currentSite.id);
+            if (result.canceled) return;
+
+            if (result.success) {
+                const msg = '✅ 导入完成: ' + result.success + ' 成功';
+                const failMsg = result.failed > 0 ? ', ' + result.failed + ' 失败' : '';
+                showToast(msg + failMsg);
+
+                // 如果有失败，显示详情
+                if (result.errors && result.errors.length > 0) {
+                    // 前 5 条错误
+                    const errPreview = result.errors.slice(0, 5).join('\n');
+                    const more = result.errors.length > 5 ? '\n...还有 ' + (result.errors.length - 5) + ' 条错误' : '';
+                    alert('导入结果\n\n成功: ' + result.success + '\n失败: ' + result.failed + '\n\n错误详情:\n' + errPreview + more);
+                }
+
+                await loadProducts();
+            } else {
+                showToast('❌ 导入失败: ' + (result.error || '未知错误'));
+            }
+        } catch (err) {
+            showToast('❌ 导入失败: ' + err.message);
+        }
+    }
+
     // ===== 绑定事件 =====
     function bindEvents() {
         document.getElementById('btnAddProduct').addEventListener('click', openAdd);
+        document.getElementById('btnDownloadTemplate').addEventListener('click', downloadTemplate);
+        document.getElementById('btnImportExcel').addEventListener('click', importExcel);
         document.getElementById('modalProductClose').addEventListener('click', closeModal);
         document.getElementById('modalProductCancel').addEventListener('click', closeModal);
         document.getElementById('modalProductSave').addEventListener('click', saveProduct);
