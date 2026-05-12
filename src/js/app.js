@@ -74,6 +74,7 @@
             if (window.yolongcms && window.yolongcms.app) {
                 await window.yolongcms.app.write({ activeSiteId: null });
             }
+            window.dispatchEvent(new CustomEvent('siteChanged', { detail: { site: null } }));
             return;
         }
 
@@ -81,6 +82,9 @@
         updateTopbar();
         renderDropdown();
         await saveAppState();
+
+        // 通知所有页面站点已切换
+        window.dispatchEvent(new CustomEvent('siteChanged', { detail: { site } }));
     }
 
     // ===== 刷新站点列表（从文件重新读取） =====

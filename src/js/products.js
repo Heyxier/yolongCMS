@@ -339,4 +339,9 @@
         bindEvents();
         await loadProducts();
     };
+
+    // 站点切换时刷新
+    window.addEventListener('siteChanged', () => {
+        loadProducts();
+    });
 })();

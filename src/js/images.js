@@ -277,4 +277,9 @@
         bindEvents();
         await loadImages();
     };
+
+    // 站点切换时刷新
+    window.addEventListener('siteChanged', () => {
+        loadImages();
+    });
 })();
