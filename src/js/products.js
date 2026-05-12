@@ -103,62 +103,81 @@
 
     // ===== 渲染产品列表 =====
     function renderProducts() {
-        const $list = document.getElementById('productList');
-        const $empty = document.getElementById('productEmpty');
-        const $stats = document.getElementById('productStats');
+        try {
+            const $list = document.getElementById('productList');
+            const $empty = document.getElementById('productEmpty');
+            const $stats = document.getElementById('productStats');
 
-        const filterCat = document.getElementById('filterCategory').value;
-        const filterStatus = document.getElementById('filterStatus').value;
-        const filterSearch = document.getElementById('filterSearch').value.toLowerCase().trim();
+            if (!$list || !$stats) return;
+            if (!$empty) console.warn('[Products] productEmpty not found');
 
-        let filtered = products.filter(p => {
-            if (filterCat && p.category !== filterCat) return false;
-            if (filterStatus !== '' && (p.status === undefined || String(p.status) !== filterStatus)) return false;
-            if (filterSearch) {
-                const name = (p.name || p.title || '').toLowerCase();
-                const model = (p.model || '').toLowerCase();
-                if (!name.includes(filterSearch) && !model.includes(filterSearch)) return false;
+            const filterCat = document.getElementById('filterCategory')?.value || '';
+            const filterStatus = document.getElementById('filterStatus')?.value || '';
+            const filterSearch = (document.getElementById('filterSearch')?.value || '').toLowerCase().trim();
+
+            let filtered = products.filter(p => {
+                if (filterCat && p.category !== filterCat) return false;
+                if (filterStatus !== '' && (p.status === undefined || String(p.status) !== filterStatus)) return false;
+                if (filterSearch) {
+                    const name = (p.title || p.name || '').toLowerCase();
+                    const model = (p.model || '').toLowerCase();
+                    if (!name.includes(filterSearch) && !model.includes(filterSearch)) return false;
+                }
+                return true;
+            });
+
+            $stats.textContent = '共 ' + filtered.length + ' / ' + products.length + ' 个产品';
+
+            if (!filtered.length) {
+                $list.innerHTML = '';
+                if ($empty) {
+                    $empty.style.display = 'flex';
+                    const p = $empty.querySelector('p');
+                    if (p) p.textContent = products.length ? '没有匹配的产品' : '暂无产品，点击"添加产品"开始';
+                }
+                return;
             }
-            return true;
-        });
 
-        $stats.textContent = '共 ' + filtered.length + ' / ' + products.length + ' 个产品';
+            if ($empty) $empty.style.display = 'none';
 
-        if (!filtered.length) {
-            $empty.style.display = 'flex';
-            $empty.querySelector('p').textContent = products.length ? '没有匹配的产品' : '暂无产品，点击"添加产品"开始';
-            $list.innerHTML = '';
-            return;
+            let html = '';
+            filtered.forEach(p => {
+                const isActive = p.status !== false;
+                const model = escapeHtml(p.model || p.slug);
+                const title = escapeHtml(p.title || p.name || p.slug);
+                const category = escapeHtml(p.category || '');
+                const filename = escapeHtml(p.name);
+
+                html += '<div class="product-card">';
+                html += '  <div class="product-info">';
+                html += '    <div class="product-model">' + model + '</div>';
+                html += '    <div class="product-name">' + title + '</div>';
+                html += '    <div class="product-meta">';
+                if (category) html += '      <span class="product-tag">' + category + '</span>';
+                html += '      <span class="product-status ' + (isActive ? 'status-on' : 'status-off') + '">' + (isActive ? '上架' : '下架') + '</span>';
+                html += '    </div>';
+                html += '  </div>';
+                html += '  <div class="product-actions">';
+                html += '    <button class="btn btn-primary-outline btn-sm" data-file="' + filename + '" data-action="edit">编辑</button>';
+                html += '    <button class="btn btn-danger-outline btn-sm" data-file="' + filename + '" data-action="delete">删除</button>';
+                html += '  </div>';
+                html += '</div>';
+            });
+            $list.innerHTML = html;
+
+            // 绑定事件
+            $list.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', () => openEdit(btn.dataset.file));
+            });
+            $list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+                btn.addEventListener('click', () => deleteProduct(btn.dataset.file));
+            });
+        } catch (err) {
+            console.error('[Products] renderProducts error:', err);
+            // 显示错误但不崩溃
+            const $list = document.getElementById('productList');
+            if ($list) $list.innerHTML = '<div class="log-empty">渲染失败: ' + escapeHtml(err.message) + '</div>';
         }
-        $empty.style.display = 'none';
-
-        let html = '';
-        filtered.forEach(p => {
-            const isActive = p.status !== false; // undefined 或 true 视为上架
-            html += '<div class="product-card">';
-            html += '  <div class="product-info">';
-            html += '    <div class="product-model">' + escapeHtml(p.model || p.slug) + '</div>';
-            html += '    <div class="product-name">' + escapeHtml(p.title || p.name || p.slug) + '</div>';
-            html += '    <div class="product-meta">';
-            if (p.category) html += '      <span class="product-tag">' + escapeHtml(p.category) + '</span>';
-            html += '      <span class="product-status ' + (isActive ? 'status-on' : 'status-off') + '">' + (isActive ? '上架' : '下架') + '</span>';
-            html += '    </div>';
-            html += '  </div>';
-            html += '  <div class="product-actions">';
-            html += '    <button class="btn btn-primary-outline btn-sm" data-file="' + escapeHtml(p.name) + '" data-action="edit">编辑</button>';
-            html += '    <button class="btn btn-danger-outline btn-sm" data-file="' + escapeHtml(p.name) + '" data-action="delete">删除</button>';
-            html += '  </div>';
-            html += '</div>';
-        });
-        $list.innerHTML = html;
-
-        // 绑定事件
-        $list.querySelectorAll('[data-action="edit"]').forEach(btn => {
-            btn.addEventListener('click', () => openEdit(btn.dataset.file));
-        });
-        $list.querySelectorAll('[data-action="delete"]').forEach(btn => {
-            btn.addEventListener('click', () => deleteProduct(btn.dataset.file));
-        });
     }
 
     // ===== 打开编辑弹窗 =====
