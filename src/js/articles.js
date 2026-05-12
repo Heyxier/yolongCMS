@@ -122,6 +122,27 @@
         const $source = document.getElementById('afBody');
         $content.innerHTML = html || '';
         $source.value = html || '';
+        // 将相对路径的图片转为本地绝对路径，以便编辑器预览
+        resolveEditorImages();
+    }
+
+    async function resolveEditorImages() {
+        const site = getActiveSite();
+        if (!site || !window.yolongcms || !window.yolongcms.sites) return;
+        try {
+            const repoPath = await window.yolongcms.sites.repoPath(site.id);
+            if (!repoPath) return;
+            const $content = document.getElementById('richContent');
+            $content.querySelectorAll('img[src^="/images/"]').forEach(img => {
+                const relative = img.getAttribute('src');
+                // 如果是 Windows 路径，注意反斜杠
+                const localPath = 'file://' + repoPath + relative;
+                img.setAttribute('data-src', relative);
+                img.setAttribute('src', localPath);
+            });
+        } catch {
+            // 静默失败，图片不预览也不影响功能
+        }
     }
 
     function clearRichContent() {

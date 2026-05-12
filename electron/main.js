@@ -223,6 +223,11 @@ function registerIpcHandlers() {
         return logService.clear();
     });
 
+    // ===== 路径查询（渲染进程需要知道本地仓库路径） =====
+    ipcMain.handle('sites:repo-path', (_event, siteId) => {
+        return path.join(REPOS_DIR, siteId || '');
+    });
+
     // ===== 产品管理 =====
     ipcMain.handle('products:list', (_event, siteId) => {
         const dir = path.join(REPOS_DIR, siteId, '_products');

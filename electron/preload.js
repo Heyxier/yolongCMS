@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('yolongcms', {
         listRepos: () => ipcRenderer.invoke('sites:list-repos'),
         deleteRepo: (repoId) => ipcRenderer.invoke('sites:delete-repo', repoId),
         cloneRepo: (repoUrl, siteId, branch) => ipcRenderer.invoke('sites:clone-repo', { repoUrl, siteId, branch }),
+        repoPath: (siteId) => ipcRenderer.invoke('sites:repo-path', siteId),
     },
 
     // ===== Git 服务 =====
