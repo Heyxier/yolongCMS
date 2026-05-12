@@ -2,12 +2,15 @@
 (function () {
     'use strict';
 
-    const $empty = document.getElementById('dashboardEmpty');
-    const $content = document.getElementById('dashboardContent');
-    const $subtitle = document.getElementById('dashboardSubtitle');
-
     // ===== 渲染 =====
     async function render() {
+        const $empty = document.getElementById('dashboardEmpty');
+        const $content = document.getElementById('dashboardContent');
+        const $subtitle = document.getElementById('dashboardSubtitle');
+
+        // DOM 可能尚未加载（动态页面切换时）
+        if (!$empty || !$content) return;
+
         const app = window.__app;
         const site = app ? app.getCurrentSite() : null;
 
