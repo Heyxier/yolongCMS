@@ -101,5 +101,6 @@ contextBridge.exposeInMainWorld('yolongcms', {
         write: (data) => ipcRenderer.invoke('config:write', data),
         get: (key) => ipcRenderer.invoke('config:get', key),
         set: (key, value) => ipcRenderer.invoke('config:set', key, value),
+        testGithub: (token) => ipcRenderer.invoke('config:test-github', token),
     },
 });

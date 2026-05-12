@@ -103,6 +103,9 @@ function registerIpcHandlers() {
     ipcMain.handle('config:set', (_event, key, value) => {
         return configService.set(key, value);
     });
+    ipcMain.handle('config:test-github', async (_event, token) => {
+        return await testGitHubToken(token);
+    });
 
     // 读取本地 repos 目录列表
     ipcMain.handle('sites:list-repos', () => {
@@ -546,6 +549,46 @@ function registerIpcHandlers() {
         }
         logService.append('info', 'sites', '已删除图片资源', { siteId, path: relPath });
         return { success: true };
+    });
+}
+
+const https = require('https');
+
+// ===== 测试 GitHub Token 连接 =====
+function testGitHubToken(token) {
+    return new Promise((resolve) => {
+        const req = https.get('https://api.github.com/user', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'YolongCMS',
+            },
+            timeout: 15000,
+        }, (res) => {
+            let body = '';
+            res.on('data', chunk => body += chunk);
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    try {
+                        const user = JSON.parse(body);
+                        resolve({ success: true, login: user.login });
+                    } catch {
+                        resolve({ success: true, login: 'unknown' });
+                    }
+                } else if (res.statusCode === 401) {
+                    resolve({ success: false, error: 'Token 无效（401），请检查 Token 是否正确' });
+                } else {
+                    resolve({ success: false, error: `GitHub 返回状态码 ${res.statusCode}` });
+                }
+            });
+        });
+        req.on('error', (err) => {
+            resolve({ success: false, error: '网络错误: ' + (err.message || '无法连接 GitHub') });
+        });
+        req.on('timeout', () => {
+            req.destroy();
+            resolve({ success: false, error: '连接超时' });
+        });
     });
 }
 

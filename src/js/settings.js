@@ -137,30 +137,21 @@
         $result.innerHTML = '⏳ 正在测试连接...';
 
         try {
-            // 用 fetch 测试 GitHub API
-            const resp = await fetch('https://api.github.com/user', {
-                headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.v3+json' },
-            });
-            if (resp.ok) {
-                const user = await resp.json();
+            const resp = await window.yolongcms.config.testGithub(token);
+            if (resp.success) {
                 $result.className = 'settings-result settings-result-success';
-                $result.innerHTML = '✅ 连接成功！GitHub 用户: <strong>' + escapeHtml(user.login) + '</strong>';
-                // 自动填入用户名
+                $result.innerHTML = '✅ 连接成功！GitHub 用户: <strong>' + escapeHtml(resp.login) + '</strong>';
                 if (!document.getElementById('settingsGithubUser').value) {
-                    document.getElementById('settingsGithubUser').value = user.login;
+                    document.getElementById('settingsGithubUser').value = resp.login;
                 }
                 showToast('🔗 GitHub 连接成功');
-            } else if (resp.status === 401) {
-                $result.className = 'settings-result settings-result-error';
-                $result.innerHTML = '❌ Token 无效（401 Unauthorized），请检查 Token 是否正确';
             } else {
-                const err = await resp.text();
                 $result.className = 'settings-result settings-result-error';
-                $result.innerHTML = '❌ 连接失败 (' + resp.status + '): ' + escapeHtml(err.substring(0, 200));
+                $result.innerHTML = '❌ ' + escapeHtml(resp.error || '连接失败');
             }
         } catch (err) {
             $result.className = 'settings-result settings-result-error';
-            $result.innerHTML = '❌ 网络错误: ' + escapeHtml(err.message || '无法连接到 GitHub');
+            $result.innerHTML = '❌ 意外错误: ' + escapeHtml(err.message || '未知');
         }
     }
 
