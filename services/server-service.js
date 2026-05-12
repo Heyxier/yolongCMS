@@ -31,24 +31,34 @@ async function fetchMessages(serverUrl, siteId) {
 /**
  * 服务器健康检查
  * @param {string} serverUrl
+ * @param {number} [timeout=15000]
+ * @param {number} [retries=2]
  * @returns {{ success: boolean, error?: string }}
  */
-async function healthCheck(serverUrl) {
+async function healthCheck(serverUrl, timeout = 15000, retries = 2) {
     const baseUrl = (serverUrl || DEFAULT_SERVER).replace(/\/+$/, '');
     const url = `${baseUrl}/health`;
 
-    try {
-        await httpsGet(url);
-        return { success: true };
-    } catch (err) {
-        return { success: false, error: err.message || '服务器不可达' };
+    for (let i = 0; i <= retries; i++) {
+        try {
+            await httpsGet(url, timeout);
+            return { success: true };
+        } catch (err) {
+            if (i < retries) {
+                // 重试前等待 1 秒
+                await new Promise(r => setTimeout(r, 1000));
+                continue;
+            }
+            return { success: false, error: err.message || '服务器不可达' };
+        }
     }
+    return { success: false, error: '健康检查异常' };
 }
 
-function httpsGet(url) {
+function httpsGet(url, timeout = 15000) {
     return new Promise((resolve, reject) => {
         const mod = url.startsWith('https') ? https : http;
-        const req = mod.get(url, { timeout: 10000 }, (res) => {
+        const req = mod.get(url, { timeout }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
