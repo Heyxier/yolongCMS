@@ -60,8 +60,9 @@
     // 处理 CMS 文章中使用的有限 Markdown 语法（# 标题、**加粗**、*斜体*、列表、链接）
     function markdownToHtml(text) {
         if (!text) return '';
-        // 如果已包含 HTML 标签，跳过转换
-        if (/<[a-z][\s\S]*>/i.test(text)) return text;
+        // 检测是否包含 Markdown 语法特征：标题、列表、加粗
+        const hasMarkdownSyntax = /^#{1,3}\s/m.test(text) || /^\d+\.\s/m.test(text) || /\*\*/m.test(text);
+        if (!hasMarkdownSyntax) return text;
 
         const lines = text.split('\n');
         const result = [];
@@ -101,7 +102,12 @@
                 continue;
             }
 
-            // 跳过纯 frontmatter 分隔符
+            // 跳过纯 HTML 行（已包含标签，不需要再套 <p>）
+            if (/^<[a-z][\s\S]*\/?>$/i.test(trimmed)) {
+                flushList();
+                result.push(trimmed);
+                continue;
+            }
             if (trimmed === '---') continue;
 
             // 标题
