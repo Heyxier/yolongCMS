@@ -103,7 +103,8 @@ function registerIpcHandlers() {
         const targetDir = path.join(__dirname, '..', 'repos', siteId);
         ensureDir(path.dirname(targetDir));
         if (fs.existsSync(targetDir)) {
-            return { success: false, error: '目录已存在: ' + targetDir };
+            // 目录已存在 → 视为已克隆，返回成功
+            return { success: true, path: targetDir, existing: true };
         }
         try {
             const git = simpleGit();

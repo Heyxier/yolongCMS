@@ -159,7 +159,11 @@
             if (window.yolongcms && window.yolongcms.sites) {
                 const result = await window.yolongcms.sites.cloneRepo(repo, id, branch);
                 if (result.success) {
-                    showToast('✅ 站点 "' + name + '" 已添加，仓库已克隆');
+                    if (result.existing) {
+                        showToast('✅ 站点 "' + name + '" 已添加（使用已有本地仓库）');
+                    } else {
+                        showToast('✅ 站点 "' + name + '" 已添加，仓库已克隆');
+                    }
                 } else {
                     showToast('⚠️ 站点已添加，但仓库克隆失败: ' + (result.error || '未知错误'));
                 }
