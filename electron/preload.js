@@ -88,4 +88,9 @@ contextBridge.exposeInMainWorld('yolongcms', {
         mkdir: (siteId, subDir) => ipcRenderer.invoke('images:mkdir', siteId, subDir),
         remove: (siteId, relPath) => ipcRenderer.invoke('images:remove', siteId, relPath),
     },
+
+    // ===== 分类管理 =====
+    categories: {
+        rename: (siteId, oldName, newName) => ipcRenderer.invoke('categories:rename', siteId, oldName, newName),
+    },
 });

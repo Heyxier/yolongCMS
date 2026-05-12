@@ -1,5 +1,101 @@
-<div class="page-placeholder">
+<!-- 文章管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>📝 文章管理</h2>
+        <p class="page-subtitle" id="articlesSubtitle">管理所有新闻与文章</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" id="btnAddArticle">+ 添加文章</button>
+    </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="product-filters">
+    <div class="filter-group">
+        <label>分类</label>
+        <select class="filter-select" id="artFilterCategory">
+            <option value="">全部</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>状态</label>
+        <select class="filter-select" id="artFilterStatus">
+            <option value="">全部</option>
+            <option value="true">已发布</option>
+            <option value="false">草稿</option>
+        </select>
+    </div>
+    <div class="filter-group filter-search">
+        <input type="text" class="filter-select" id="artFilterSearch" placeholder="🔍 搜索文章标题...">
+    </div>
+    <div class="log-stats" id="articleStats">共 0 篇文章</div>
+</div>
+
+<!-- 文章列表 -->
+<div class="article-list" id="articleList"></div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="articleEmpty" style="display:none;">
     <div class="placeholder-icon">📝</div>
-    <h2>文章管理</h2>
-    <p>文章 CRUD 功能将在下一阶段开发</p>
+    <h3>暂无文章</h3>
+    <p>点击"添加文章"开始管理新闻动态</p>
+</div>
+
+<!-- ===== 文章编辑弹窗 ===== -->
+<div class="modal-overlay" id="articleModal" style="display:none;">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3 id="modalArticleTitle">添加文章</h3>
+            <button class="btn-icon modal-close" id="modalArticleClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>文章标题 <span class="required">*</span></label>
+                    <input type="text" id="afTitle" placeholder="例如：Yolongtec 荣获年度最佳..." class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>分类 <span class="required">*</span></label>
+                    <input type="text" id="afCategory" placeholder="例如：news" class="form-input">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>发布日期</label>
+                    <input type="date" id="afPublishedAt" class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>状态</label>
+                    <div class="toggle-wrap">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="afStatus" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span id="afStatusText">已发布</span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>封面图片路径</label>
+                <input type="text" id="afCoverImage" placeholder="/images/construction-site.jpg" class="form-input">
+            </div>
+            <div class="form-group">
+                <label>摘要 <span class="form-hint">（文章列表页显示的简短描述）</span></label>
+                <textarea id="afExcerpt" class="form-textarea" rows="3" placeholder="文章的简短摘要..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>标签 <span class="form-hint">（每行一条）</span></label>
+                <textarea id="afTags" class="form-textarea" rows="3" placeholder="例如：&#10;品牌新闻&#10;行业荣誉"></textarea>
+            </div>
+            <div class="form-group">
+                <label>正文内容（Markdown）</label>
+                <textarea id="afBody" class="form-textarea form-textarea-md" rows="10" placeholder="# 文章标题&#10;&#10;文章详细内容..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="form-error" id="afError"></span>
+            <button class="btn btn-secondary" id="modalArticleCancel">取消</button>
+            <button class="btn btn-primary" id="modalArticleSave">保存</button>
+        </div>
+    </div>
 </div>

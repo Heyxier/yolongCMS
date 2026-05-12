@@ -1,5 +1,73 @@
-<div class="page-placeholder">
+<!-- 发布管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>🚀 发布</h2>
+        <p class="page-subtitle" id="publishSubtitle">将本地变更提交并推送到 GitHub</p>
+    </div>
+</div>
+
+<!-- 仓库信息 -->
+<div class="dashboard-cards" id="publishInfo" style="display:none;">
+    <div class="stat-card">
+        <div class="stat-label">当前站点</div>
+        <div class="stat-value" id="pubSiteName">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">分支</div>
+        <div class="stat-value" id="pubBranch">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">待提交</div>
+        <div class="stat-value" id="pubPending">—</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">远程进度</div>
+        <div class="stat-value" id="pubAheadBehind">—</div>
+    </div>
+</div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="publishEmpty" style="display:none;">
     <div class="placeholder-icon">🚀</div>
-    <h2>发布</h2>
-    <p>Git 发布功能将在下一阶段开发</p>
+    <h3 id="publishEmptyTitle">请先选择一个站点</h3>
+    <p>选择站点后可以查看和提交变更</p>
+</div>
+
+<!-- 变更列表 -->
+<div id="publishContent" style="display:none;">
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>📄 变更文件</h3>
+            <span class="section-badge" id="pubFileCount">0 个文件</span>
+        </div>
+        <div class="pub-file-list" id="pubFileList">
+            <div class="log-empty">暂无变更</div>
+        </div>
+    </div>
+
+    <!-- 提交信息 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>✏️ 提交信息</h3>
+        </div>
+        <div class="form-group">
+            <input type="text" id="pubCommitMsg" class="form-input" placeholder="描述本次变更内容..." maxlength="200">
+        </div>
+        <div class="pub-actions">
+            <button class="btn btn-secondary" id="btnGitPull">🔄 拉取最新</button>
+            <button class="btn btn-primary" id="btnCommitPush" disabled>🚀 提交并推送</button>
+        </div>
+        <div class="pub-result" id="pubResult" style="display:none;"></div>
+    </div>
+
+    <!-- 最近提交 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>🕒 最近提交</h3>
+            <span class="section-badge" id="pubLogCount">0 条</span>
+        </div>
+        <div class="log-list" id="pubLogList">
+            <div class="log-empty">暂无提交记录</div>
+        </div>
+    </div>
 </div>

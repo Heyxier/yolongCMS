@@ -412,6 +412,35 @@ function registerIpcHandlers() {
         return { success: true };
     });
 
+    // ===== 分类管理 =====
+    ipcMain.handle('categories:rename', async (_event, siteId, oldName, newName) => {
+        if (!oldName || !newName) return { success: false, error: '分类名不能为空' };
+
+        const collections = ['_products', '_articles'];
+        let totalUpdated = 0;
+
+        for (const col of collections) {
+            const dir = path.join(REPOS_DIR, siteId, col);
+            const result = mdService.list(dir);
+            if (!result.success) continue;
+
+            for (const file of result.files) {
+                const filePath = path.join(dir, file.name);
+                const raw = fs.readFileSync(filePath, 'utf-8');
+                const parsed = grayMatter(raw);
+                if (parsed.data?.category === oldName) {
+                    parsed.data.category = newName;
+                    const updated = grayMatter.stringify(parsed.content, parsed.data);
+                    fs.writeFileSync(filePath, updated, 'utf-8');
+                    totalUpdated++;
+                }
+            }
+        }
+
+        logService.append('info', 'sites', `分类重命名: "${oldName}" → "${newName}" (${totalUpdated} 个文件)`, { siteId, oldName, newName, totalUpdated });
+        return { success: true, updated: totalUpdated };
+    });
+
     // ===== 图片管理 =====
     const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico'];
 

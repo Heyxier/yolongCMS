@@ -1,5 +1,42 @@
-<div class="page-placeholder">
-    <div class="placeholder-icon">🏷️</div>
-    <h2>分类管理</h2>
-    <p>分类管理功能将在下一阶段开发</p>
+<!-- 分类管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>🏷️ 分类管理</h2>
+        <p class="page-subtitle">管理产品和文章的分类标签</p>
+    </div>
+</div>
+
+<div class="cat-table-wrap" id="catWrap">
+    <div class="empty-state" id="catEmpty" style="display:none;">
+        <div class="placeholder-icon">🏷️</div>
+        <h3>暂无分类</h3>
+        <p>请先在产品或文章中添加分类</p>
+    </div>
+</div>
+
+<!-- 重命名弹窗 -->
+<div class="modal-overlay" id="catRenameModal" style="display:none;">
+    <div class="modal" style="width:400px;">
+        <div class="modal-header">
+            <h3>重命名分类</h3>
+            <button class="btn-icon modal-close" id="catRenameClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>原名称</label>
+                <input type="text" id="catOldName" class="form-input" readonly>
+            </div>
+            <div class="form-group">
+                <label>新名称 <span class="required">*</span></label>
+                <input type="text" id="catNewName" class="form-input" placeholder="输入新分类名称">
+                <span class="form-hint">所有使用此分类的产品和文章将同步更新</span>
+            </div>
+            <div class="form-group" id="catRenamePreview" style="color:var(--text-secondary);font-size:12px;"></div>
+        </div>
+        <div class="modal-footer">
+            <span class="form-error" id="catRenameError"></span>
+            <button class="btn btn-secondary" id="catRenameCancel">取消</button>
+            <button class="btn btn-primary" id="catRenameConfirm">确认重命名</button>
+        </div>
+    </div>
 </div>
