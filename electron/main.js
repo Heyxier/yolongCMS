@@ -218,6 +218,8 @@ function createWindow() {
 app.whenReady().then(() => {
     registerIpcHandlers();
     createWindow();
+    // 自动打开开发者工具（方便排查问题）
+    mainWindow.webContents.openDevTools();
     logService.append('info', 'system', 'YolongCMS 桌面应用已启动', { version: app.getVersion() || 'dev' });
 });
 
