@@ -1,5 +1,5 @@
 // YolongCMS Desktop — Electron Main Process
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const simpleGit = require('simple-git');
@@ -231,6 +231,87 @@ function registerIpcHandlers() {
         const filePath = path.join(REPOS_DIR, siteId, '_articles', filename);
         mdService.remove(filePath);
         logService.append('info', 'sites', '文章已删除', { siteId, filename });
+        return { success: true };
+    });
+
+    // ===== 图片管理 =====
+    const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico'];
+
+    function listImageFiles(dir) {
+        ensureDir(dir);
+        const items = fs.readdirSync(dir, { withFileTypes: true });
+        const files = [];
+        const subdirs = [];
+        items.forEach(item => {
+            const fullPath = path.join(dir, item.name);
+            if (item.isDirectory()) {
+                subdirs.push({ name: item.name, path: fullPath });
+            } else if (item.isFile()) {
+                const ext = path.extname(item.name).toLowerCase();
+                if (IMAGE_EXT.includes(ext)) {
+                    const stat = fs.statSync(fullPath);
+                    files.push({
+                        name: item.name,
+                        size: stat.size,
+                        mtime: stat.mtimeMs,
+                        filePath: fullPath,
+                    });
+                }
+            }
+        });
+        return { success: true, files, subdirs };
+    }
+
+    ipcMain.handle('images:list', (_event, siteId, subDir) => {
+        const dir = path.join(REPOS_DIR, siteId, 'images', subDir || '');
+        return listImageFiles(dir);
+    });
+
+    ipcMain.handle('images:upload', async (_event, siteId, subDir) => {
+        const result = await dialog.showOpenDialog(mainWindow, {
+            properties: ['openFile', 'multiSelections'],
+            filters: [
+                { name: '图片文件', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico'] },
+                { name: '所有文件', extensions: ['*'] },
+            ],
+        });
+        if (result.canceled || !result.filePaths.length) {
+            return { success: false, canceled: true };
+        }
+
+        const destDir = path.join(REPOS_DIR, siteId, 'images', subDir || '');
+        ensureDir(destDir);
+
+        const uploaded = [];
+        for (const srcPath of result.filePaths) {
+            const filename = path.basename(srcPath);
+            const destPath = path.join(destDir, filename);
+            fs.copyFileSync(srcPath, destPath);
+            uploaded.push({ filename, path: path.posix.join('images', subDir || '', filename) });
+        }
+
+        logService.append('info', 'sites', '已上传 ' + uploaded.length + ' 张图片', { siteId, dir: subDir, files: uploaded.map(f => f.filename) });
+        return { success: true, files: uploaded };
+    });
+
+    ipcMain.handle('images:mkdir', (_event, siteId, subDir) => {
+        const dir = path.join(REPOS_DIR, siteId, 'images', subDir || '');
+        ensureDir(dir);
+        logService.append('info', 'sites', '已创建图片目录', { siteId, dir: subDir });
+        return { success: true };
+    });
+
+    ipcMain.handle('images:remove', (_event, siteId, relPath) => {
+        const filePath = path.join(REPOS_DIR, siteId, relPath);
+        if (fs.existsSync(filePath)) {
+            const stat = fs.statSync(filePath);
+            if (stat.isDirectory()) {
+                fs.rmSync(filePath, { recursive: true, force: true });
+            } else {
+                fs.unlinkSync(filePath);
+            }
+        }
+        logService.append('info', 'sites', '已删除图片资源', { siteId, path: relPath });
         return { success: true };
     });
 }

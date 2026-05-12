@@ -78,4 +78,12 @@ contextBridge.exposeInMainWorld('yolongcms', {
         write: (siteId, filename, data, content) => ipcRenderer.invoke('articles:write', siteId, filename, data, content),
         remove: (siteId, filename) => ipcRenderer.invoke('articles:remove', siteId, filename),
     },
+
+    // ===== 图片管理 =====
+    images: {
+        list: (siteId, subDir) => ipcRenderer.invoke('images:list', siteId, subDir),
+        upload: (siteId, subDir) => ipcRenderer.invoke('images:upload', siteId, subDir),
+        mkdir: (siteId, subDir) => ipcRenderer.invoke('images:mkdir', siteId, subDir),
+        remove: (siteId, relPath) => ipcRenderer.invoke('images:remove', siteId, relPath),
+    },
 });

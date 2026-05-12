@@ -1,5 +1,47 @@
-<div class="page-placeholder">
-    <div class="placeholder-icon">🖼️</div>
-    <h2>图片管理</h2>
-    <p>图片管理功能将在下一阶段开发</p>
+<!-- 图片管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>🖼️ 图片管理</h2>
+        <p class="page-subtitle">管理网站使用的图片资源</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-secondary" id="btnNewFolder">📁 新建文件夹</button>
+        <button class="btn btn-primary" id="btnUploadImages">+ 上传图片</button>
+    </div>
+</div>
+
+<!-- 路径导航 -->
+<div class="breadcrumb" id="imgBreadcrumb">
+    <span class="breadcrumb-item" data-path="">images/</span>
+</div>
+
+<!-- 图片网格 -->
+<div class="image-grid" id="imageGrid">
+    <div class="empty-state" id="imageEmpty" style="display:none;">
+        <div class="placeholder-icon">🖼️</div>
+        <h3>此目录为空</h3>
+        <p>上传图片或新建文件夹来管理图片</p>
+    </div>
+</div>
+
+<!-- ===== 新建文件夹弹窗 ===== -->
+<div class="modal-overlay" id="folderModal" style="display:none;">
+    <div class="modal" style="width:400px;">
+        <div class="modal-header">
+            <h3>新建文件夹</h3>
+            <button class="btn-icon modal-close" id="folderModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>文件夹名称</label>
+                <input type="text" id="folderNameInput" placeholder="例如：products/drill" class="form-input">
+                <span class="form-hint">支持多级路径，如 products/drill</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="form-error" id="folderError"></span>
+            <button class="btn btn-secondary" id="folderModalCancel">取消</button>
+            <button class="btn btn-primary" id="folderModalConfirm">创建</button>
+        </div>
+    </div>
 </div>
