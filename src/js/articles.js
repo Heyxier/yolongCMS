@@ -56,6 +56,88 @@
             .replace(/^-+|-+$/g, '') || 'untitled';
     }
 
+    // ===== 简易 Markdown → HTML 转换 =====
+    // 处理 CMS 文章中使用的有限 Markdown 语法（# 标题、**加粗**、*斜体*、列表、链接）
+    function markdownToHtml(text) {
+        if (!text) return '';
+        // 如果已包含 HTML 标签，跳过转换
+        if (/<[a-z][\s\S]*>/i.test(text)) return text;
+
+        const lines = text.split('\n');
+        const result = [];
+        let inList = null; // 'ol' 或 'ul'
+        let listItems = [];
+
+        function flushList() {
+            if (inList && listItems.length) {
+                result.push('<' + inList + '>');
+                listItems.forEach(item => result.push('  <li>' + item + '</li>'));
+                result.push('</' + inList + '>');
+                listItems = [];
+                inList = null;
+            }
+        }
+
+        function processInline(str) {
+            return str
+                // 先处理链接和图片，避免 _ 干扰
+                .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;">')
+                .replace(/\[([^\]]*)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+                // 行内代码
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                // 加粗
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                // 斜体
+                .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+        }
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const trimmed = line.trim();
+
+            // 空行 → 分隔段落
+            if (!trimmed) {
+                flushList();
+                continue;
+            }
+
+            // 跳过纯 frontmatter 分隔符
+            if (trimmed === '---') continue;
+
+            // 标题
+            const hMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+            if (hMatch) {
+                flushList();
+                const level = hMatch[1].length;
+                result.push('<h' + level + '>' + processInline(hMatch[2]) + '</h' + level + '>');
+                continue;
+            }
+
+            // 有序列表
+            if (/^\d+\.\s+(.*)/.test(trimmed)) {
+                const content = trimmed.replace(/^\d+\.\s+/, '');
+                if (inList !== 'ol') { flushList(); inList = 'ol'; }
+                listItems.push(processInline(content));
+                continue;
+            }
+
+            // 无序列表
+            if (/^[-*]\s+(.*)/.test(trimmed)) {
+                const content = trimmed.replace(/^[-*]\s+/, '');
+                if (inList !== 'ul') { flushList(); inList = 'ul'; }
+                listItems.push(processInline(content));
+                continue;
+            }
+
+            // 普通段落
+            flushList();
+            result.push('<p>' + processInline(trimmed) + '</p>');
+        }
+
+        flushList();
+        return result.join('\n');
+    }
+
     // ===== 富文本编辑器 =====
     let isSourceMode = false;
 
@@ -124,8 +206,10 @@
     function setRichContent(html) {
         const $content = document.getElementById('richContent');
         const $source = document.getElementById('afBody');
-        $content.innerHTML = html || '';
-        $source.value = html || '';
+        // 如果是 Markdown 格式（不含 HTML 标签），先转为 HTML
+        const rendered = markdownToHtml(html || '');
+        $content.innerHTML = rendered;
+        $source.value = rendered;
         // 将相对路径的图片转为本地绝对路径，以便编辑器预览
         resolveEditorImages();
     }
