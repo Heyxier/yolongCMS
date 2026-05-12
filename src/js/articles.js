@@ -114,6 +114,10 @@
             }
             return match;
         });
+        // 修复块级标签粘在 Markdown 段落末尾的问题
+        // 例如 "text<p><img>" → "text\n\n<p><img>"，避免 kramdown 转义
+        html = html.replace(/([^\n])\s*<\/(p|div|ul|ol|h[1-6]|table)\b/gi, '$1\n\n<\/$2');
+        html = html.replace(/([^\n])\s*<(p|div|ul|ol|h[1-6]|table|pre|blockquote)(\s|>)/gi, '$1\n\n<$2$3');
         return html;
     }
 
