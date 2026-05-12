@@ -103,4 +103,9 @@ contextBridge.exposeInMainWorld('yolongcms', {
         set: (key, value) => ipcRenderer.invoke('config:set', key, value),
         testGithub: (token) => ipcRenderer.invoke('config:test-github', token),
     },
+
+    // ===== 剪贴板 =====
+    clipboard: {
+        write: (text) => ipcRenderer.invoke('clipboard:write', text),
+    },
 });

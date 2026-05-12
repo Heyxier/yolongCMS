@@ -590,6 +590,12 @@ function testGitHubToken(token) {
             resolve({ success: false, error: '连接超时' });
         });
     });
+    // ===== 剪贴板 =====
+    ipcMain.handle('clipboard:write', (_event, text) => {
+        const { clipboard } = require('electron');
+        clipboard.writeText(text);
+        return true;
+    });
 }
 
 let mainWindow = null;

@@ -56,7 +56,143 @@
             .replace(/^-+|-+$/g, '') || 'untitled';
     }
 
-    // ===== 加载 =====
+    // ===== 富文本编辑器 =====
+    let isSourceMode = false;
+
+    function initRichEditor() {
+        const $toolbar = document.getElementById('richToolbar');
+        if (!$toolbar) return;
+
+        // 工具条按钮
+        $toolbar.querySelectorAll('[data-cmd]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cmd = btn.dataset.cmd;
+                if (cmd === 'source') {
+                    toggleSource();
+                } else if (cmd === 'image') {
+                    insertImage();
+                } else {
+                    document.execCommand(cmd, false, null);
+                    document.getElementById('richContent').focus();
+                }
+            });
+        });
+    }
+
+    function toggleSource() {
+        const $content = document.getElementById('richContent');
+        const $source = document.getElementById('afBody');
+        const $btn = document.getElementById('btnRichSource');
+        isSourceMode = !isSourceMode;
+        if (isSourceMode) {
+            $source.value = $content.innerHTML;
+            $content.style.display = 'none';
+            $source.style.display = 'block';
+            $btn.style.background = 'var(--accent)';
+            $btn.style.color = '#fff';
+        } else {
+            $content.innerHTML = $source.value;
+            $source.style.display = 'none';
+            $content.style.display = 'block';
+            $btn.style.background = '';
+            $btn.style.color = '';
+        }
+    }
+
+    function getRichContent() {
+        const $content = document.getElementById('richContent');
+        const $source = document.getElementById('afBody');
+        return isSourceMode ? $source.value : $content.innerHTML;
+    }
+
+    function setRichContent(html) {
+        const $content = document.getElementById('richContent');
+        const $source = document.getElementById('afBody');
+        $content.innerHTML = html || '';
+        $source.value = html || '';
+    }
+
+    function clearRichContent() {
+        setRichContent('');
+        if (isSourceMode) toggleSource();
+    }
+
+    async function insertImage() {
+        const site = getActiveSite();
+        if (!site) { showToast('请先选择一个站点'); return; }
+
+        openImagePicker((path) => {
+            const imgHtml = `<p><img src="${escapeHtml(path)}" alt="" style="max-width:100%;border-radius:6px;"></p>`;
+            const $content = document.getElementById('richContent');
+
+            if (isSourceMode) {
+                const $source = document.getElementById('afBody');
+                $source.value += '\n' + imgHtml;
+            } else {
+                $content.focus();
+                document.execCommand('insertHTML', false, imgHtml);
+            }
+        });
+    }
+
+    // ===== 图片选择弹窗 =====
+    let imagePickerCallback = null;
+
+    async function openImagePicker(callback) {
+        imagePickerCallback = callback;
+        const $modal = document.getElementById('imagePickerModal');
+        if ($modal) {
+            $modal.style.display = 'flex';
+            loadPickerImages();
+        } else {
+            // 没有图片选择弹窗，回退到 prompt
+            const path = prompt('输入图片路径（例如: /images/news/photo.jpg）');
+            if (path && path.trim()) callback(path.trim());
+        }
+    }
+
+    function closeImagePicker() {
+        const $modal = document.getElementById('imagePickerModal');
+        if ($modal) $modal.style.display = 'none';
+        imagePickerCallback = null;
+    }
+
+    async function loadPickerImages() {
+        const site = getActiveSite();
+        if (!site) return;
+        const $list = document.getElementById('pickerImageList');
+        if (!$list) return;
+        try {
+            const r = await window.yolongcms.images.list(site.id, 'news');
+            let html = '';
+            if (r.success && r.files && r.files.length) {
+                r.files.forEach(f => {
+                    const relPath = '/images/news/' + f.name;
+                    html += '<div class="picker-image-item" data-path="' + escapeHtml(relPath) + '">';
+                    html += '  <img src="file://' + escapeHtml(f.filePath) + '" loading="lazy">';
+                    html += '  <span>' + escapeHtml(f.name) + '</span>';
+                    html += '</div>';
+                });
+            } else {
+                html = '<div class="picker-empty">暂无图片，请先上传</div>';
+            }
+            $list.innerHTML = html;
+
+            $list.querySelectorAll('.picker-image-item').forEach(el => {
+                el.addEventListener('dblclick', () => {
+                    const path = el.dataset.path;
+                    if (imagePickerCallback) imagePickerCallback(path);
+                    closeImagePicker();
+                });
+                el.addEventListener('click', () => {
+                    document.querySelectorAll('.picker-image-item').forEach(i => i.classList.remove('selected'));
+                    el.classList.add('selected');
+                });
+            });
+        } catch (err) {
+            $list.innerHTML = '<div class="picker-empty">加载失败: ' + err.message + '</div>';
+        }
+    }
     async function loadArticles() {
         currentSite = getActiveSite();
         if (!currentSite) { showEmpty('请先选择一个站点'); return; }
@@ -178,7 +314,7 @@
             document.getElementById('afCoverImage').value = d.coverImage || '';
             document.getElementById('afExcerpt').value = d.excerpt || '';
             document.getElementById('afTags').value = formatLines(d.tags);
-            document.getElementById('afBody').value = r.content || '';
+            setRichContent(r.content || '');
             document.getElementById('afError').textContent = '';
             showModal();
         } catch (err) {
@@ -198,7 +334,7 @@
         document.getElementById('afCoverImage').value = '';
         document.getElementById('afExcerpt').value = '';
         document.getElementById('afTags').value = '';
-        document.getElementById('afBody').value = '';
+        clearRichContent();
         document.getElementById('afError').textContent = '';
         showModal();
     }
@@ -235,7 +371,7 @@
             tags: parseLines(document.getElementById('afTags').value),
             status: document.getElementById('afStatus').checked,
         };
-        const body = document.getElementById('afBody').value;
+        const body = getRichContent();
 
         try {
             const r = await window.yolongcms.articles.write(currentSite.id, editingFile || filename, data, body);
@@ -268,6 +404,18 @@
         document.getElementById('modalArticleCancel').addEventListener('click', closeModal);
         document.getElementById('modalArticleSave').addEventListener('click', saveArticle);
         document.getElementById('afStatus').addEventListener('change', updateStatusText);
+        // 图片选择弹窗
+        document.getElementById('pickerModalClose')?.addEventListener('click', closeImagePicker);
+        document.getElementById('pickerModalCancel')?.addEventListener('click', closeImagePicker);
+        document.getElementById('pickerModalSelect')?.addEventListener('click', () => {
+            const sel = document.querySelector('.picker-image-item.selected');
+            if (sel && imagePickerCallback) {
+                imagePickerCallback(sel.dataset.path);
+                closeImagePicker();
+            } else {
+                showToast('请先点击选择一张图片');
+            }
+        });
 
         ['artFilterCategory', 'artFilterStatus', 'artFilterSearch'].forEach(id => {
             const el = document.getElementById(id);
@@ -284,6 +432,7 @@
     // ===== 初始化 =====
     window.init_articles = async function () {
         bindEvents();
+        initRichEditor();
         await loadArticles();
     };
 

@@ -88,14 +88,47 @@
                 <textarea id="afTags" class="form-textarea" rows="3" placeholder="例如：&#10;品牌新闻&#10;行业荣誉"></textarea>
             </div>
             <div class="form-group">
-                <label>正文内容（Markdown）</label>
-                <textarea id="afBody" class="form-textarea form-textarea-md" rows="10" placeholder="# 文章标题&#10;&#10;文章详细内容..."></textarea>
+                <label>正文内容</label>
+                <div class="rich-editor">
+                    <div class="rich-toolbar" id="richToolbar">
+                        <button type="button" class="rich-btn" data-cmd="bold" title="加粗"><b>B</b></button>
+                        <button type="button" class="rich-btn" data-cmd="italic" title="斜体"><i>I</i></button>
+                        <button type="button" class="rich-btn" data-cmd="heading" title="标题">H</button>
+                        <span class="rich-divider"></span>
+                        <button type="button" class="rich-btn" data-cmd="insertUnorderedList" title="无序列表">☰</button>
+                        <button type="button" class="rich-btn" data-cmd="insertOrderedList" title="有序列表">1.</button>
+                        <span class="rich-divider"></span>
+                        <button type="button" class="rich-btn" data-cmd="image" title="插入图片">🖼️</button>
+                        <span class="rich-divider"></span>
+                        <button type="button" class="rich-btn" data-cmd="source" title="源码" id="btnRichSource">&lt;/&gt;</button>
+                    </div>
+                    <div class="rich-content" id="richContent" contenteditable="true"></div>
+                    <textarea id="afBody" class="rich-source" style="display:none;" rows="10"></textarea>
+                </div>
             </div>
         </div>
         <div class="modal-footer">
             <span class="form-error" id="afError"></span>
             <button class="btn btn-secondary" id="modalArticleCancel">取消</button>
             <button class="btn btn-primary" id="modalArticleSave">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 图片选择弹窗 ===== -->
+<div class="modal-overlay" id="imagePickerModal" style="display:none;">
+    <div class="modal modal-lg" style="max-width:600px;">
+        <div class="modal-header">
+            <h3>🖼️ 选择图片</h3>
+            <button class="btn-icon modal-close" id="pickerModalClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:var(--text-secondary);margin-bottom:16px;font-size:13px;">双击图片插入到文章，或选中后点击下方按钮</p>
+            <div class="picker-image-grid" id="pickerImageList"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="pickerModalCancel">取消</button>
+            <button class="btn btn-primary" id="pickerModalSelect">插入选中图片</button>
         </div>
     </div>
 </div>
