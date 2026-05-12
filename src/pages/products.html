@@ -1,5 +1,128 @@
-<div class="page-placeholder">
-    <div class="placeholder-icon">📦</div>
-    <h2>产品管理</h2>
-    <p>产品 CRUD 功能将在下一阶段开发</p>
+<!-- 产品管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>📦 产品管理</h2>
+        <p class="page-subtitle" id="productsSubtitle">管理所有产品</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" id="btnAddProduct">+ 添加产品</button>
+    </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="product-filters">
+    <div class="filter-group">
+        <label>分类</label>
+        <select class="filter-select" id="filterCategory">
+            <option value="">全部</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>状态</label>
+        <select class="filter-select" id="filterStatus">
+            <option value="">全部</option>
+            <option value="true">上架</option>
+            <option value="false">下架</option>
+        </select>
+    </div>
+    <div class="filter-group filter-search">
+        <input type="text" class="filter-select" id="filterSearch" placeholder="🔍 搜索产品名称或型号...">
+    </div>
+    <div class="log-stats" id="productStats">共 0 个产品</div>
+</div>
+
+<!-- 产品列表 -->
+<div class="product-list" id="productList">
+    <div class="empty-state" id="productEmpty" style="display:none;">
+        <div class="placeholder-icon">📦</div>
+        <h3>暂无产品</h3>
+        <p>点击"添加产品"开始管理产品数据</p>
+    </div>
+</div>
+
+<!-- ===== 产品编辑弹窗 ===== -->
+<div class="modal-overlay" id="productModal" style="display:none;">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3 id="modalProductTitle">添加产品</h3>
+            <button class="btn-icon modal-close" id="modalProductClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <!-- 基本信息 -->
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>型号 <span class="required">*</span></label>
+                    <input type="text" id="pfModel" placeholder="例如：ZPT-CD-12252" class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>产品名称 <span class="required">*</span></label>
+                    <input type="text" id="pfName" placeholder="例如：12V 25Nm Drill Driver" class="form-input">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>分类 <span class="required">*</span></label>
+                    <input type="text" id="pfCategory" placeholder="例如：drill" class="form-input">
+                    <span class="form-hint">建议使用英文，与已有分类保持一致</span>
+                </div>
+                <div class="form-group flex-1">
+                    <label>状态</label>
+                    <label class="toggle-label">
+                        <input type="checkbox" id="pfStatus" checked>
+                        <span class="toggle-slider"></span>
+                        <span id="pfStatusText">上架</span>
+                    </label>
+                </div>
+            </div>
+            <!-- 规格 -->
+            <div class="form-row">
+                <div class="form-group flex-1">
+                    <label>电压</label>
+                    <input type="text" id="pfVoltage" placeholder="例如：12V" class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>扭矩</label>
+                    <input type="text" id="pfTorque" placeholder="例如：25 N·m" class="form-input">
+                </div>
+                <div class="form-group flex-1">
+                    <label>电机类型</label>
+                    <select id="pfMotorType" class="form-input">
+                        <option value="">请选择</option>
+                        <option value="brushed">有刷 (Brushed)</option>
+                        <option value="brushless">无刷 (Brushless)</option>
+                    </select>
+                </div>
+            </div>
+            <!-- 图片 -->
+            <div class="form-group">
+                <label>产品图片路径</label>
+                <input type="text" id="pfImage" placeholder="例如：/images/products/drill/ZPT-CD-12252.jpg" class="form-input">
+            </div>
+            <!-- 描述 -->
+            <div class="form-group">
+                <label>简介描述</label>
+                <input type="text" id="pfDescription" placeholder="简短的产品描述" class="form-input">
+            </div>
+            <!-- 特性 (每行一条) -->
+            <div class="form-group">
+                <label>产品特性 <span class="form-hint">（每行一条）</span></label>
+                <textarea id="pfFeatures" class="form-textarea" rows="4" placeholder="例如：&#10;Two-speed gearbox for versatile operation&#10;Auto spindle lock for quick bit changes"></textarea>
+            </div>
+            <!-- 配件 (每行一条) -->
+            <div class="form-group">
+                <label>配件清单 <span class="form-hint">（每行一条）</span></label>
+                <textarea id="pfAccessories" class="form-textarea" rows="3" placeholder="例如：&#10;2pc 2.0Ah Battery&#10;1pc Quick Charger"></textarea>
+            </div>
+            <!-- Markdown 正文 -->
+            <div class="form-group">
+                <label>正文内容（Markdown）</label>
+                <textarea id="pfBody" class="form-textarea form-textarea-md" rows="8" placeholder="# 产品标题&#10;&#10;产品详细描述..."></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <span class="form-error" id="pfError"></span>
+            <button class="btn btn-secondary" id="modalProductCancel">取消</button>
+            <button class="btn btn-primary" id="modalProductSave">保存</button>
+        </div>
+    </div>
 </div>

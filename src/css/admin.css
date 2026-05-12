@@ -953,3 +953,206 @@ html, body {
     color: var(--text-muted);
     font-size: 12px;
 }
+
+/* ===== 产品管理 ===== */
+.product-filters {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.product-filters .filter-search {
+    flex: 1;
+    min-width: 200px;
+}
+
+.product-filters .filter-search input {
+    width: 100%;
+}
+
+.product-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.product-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 14px 20px;
+    transition: border-color 0.15s;
+}
+
+.product-card:hover {
+    border-color: var(--accent);
+}
+
+.product-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-model {
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--accent);
+    margin-bottom: 2px;
+}
+
+.product-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.product-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.product-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.product-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.status-on {
+    background: #22c55e22;
+    color: var(--success);
+}
+
+.status-off {
+    background: #ef444422;
+    color: var(--danger);
+}
+
+.product-actions {
+    flex-shrink: 0;
+    margin-left: 16px;
+    display: flex;
+    gap: 6px;
+}
+
+/* 开关 */
+.toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    margin-top: 4px;
+}
+
+.toggle-label input {
+    display: none;
+}
+
+.toggle-slider {
+    width: 40px;
+    height: 22px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 11px;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    top: 2px;
+    left: 2px;
+    transition: all 0.2s;
+}
+
+.toggle-label input:checked + .toggle-slider {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.toggle-label input:checked + .toggle-slider::after {
+    left: 20px;
+    background: #fff;
+}
+
+#pfStatusText {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* 大弹窗 */
+.modal-lg {
+    width: 720px;
+    max-width: 95vw;
+}
+
+/* 文本域 */
+.form-textarea {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: var(--font);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+}
+
+.form-textarea:focus {
+    border-color: var(--accent);
+}
+
+.form-textarea-md {
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.form-error {
+    flex: 1;
+    color: var(--danger);
+    font-size: 12px;
+}
+
+/* 按钮变体 */
+.btn-primary-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    transition: all 0.15s;
+}
+
+.btn-primary-outline:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 12px;
+}

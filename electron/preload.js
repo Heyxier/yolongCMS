@@ -62,4 +62,20 @@ contextBridge.exposeInMainWorld('yolongcms', {
         list: (filter) => ipcRenderer.invoke('log:list', filter),
         clear: () => ipcRenderer.invoke('log:clear'),
     },
+
+    // ===== 产品管理 =====
+    products: {
+        list: (siteId) => ipcRenderer.invoke('products:list', siteId),
+        read: (siteId, filename) => ipcRenderer.invoke('products:read', siteId, filename),
+        write: (siteId, filename, data, content) => ipcRenderer.invoke('products:write', siteId, filename, data, content),
+        remove: (siteId, filename) => ipcRenderer.invoke('products:remove', siteId, filename),
+    },
+
+    // ===== 文章管理 =====
+    articles: {
+        list: (siteId) => ipcRenderer.invoke('articles:list', siteId),
+        read: (siteId, filename) => ipcRenderer.invoke('articles:read', siteId, filename),
+        write: (siteId, filename, data, content) => ipcRenderer.invoke('articles:write', siteId, filename, data, content),
+        remove: (siteId, filename) => ipcRenderer.invoke('articles:remove', siteId, filename),
+    },
 });

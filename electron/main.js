@@ -193,6 +193,46 @@ function registerIpcHandlers() {
         logService.append('info', 'system', '日志已清空');
         return logService.clear();
     });
+
+    // ===== 产品管理 =====
+    ipcMain.handle('products:list', (_event, siteId) => {
+        const dir = path.join(REPOS_DIR, siteId, '_products');
+        return mdService.list(dir);
+    });
+    ipcMain.handle('products:read', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_products', filename);
+        return mdService.read(filePath);
+    });
+    ipcMain.handle('products:write', (_event, siteId, filename, data, content) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_products', filename);
+        return mdService.write(filePath, data, content);
+    });
+    ipcMain.handle('products:remove', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_products', filename);
+        mdService.remove(filePath);
+        logService.append('info', 'sites', '产品已删除', { siteId, filename });
+        return { success: true };
+    });
+
+    // ===== 文章管理（同产品结构） =====
+    ipcMain.handle('articles:list', (_event, siteId) => {
+        const dir = path.join(REPOS_DIR, siteId, '_articles');
+        return mdService.list(dir);
+    });
+    ipcMain.handle('articles:read', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_articles', filename);
+        return mdService.read(filePath);
+    });
+    ipcMain.handle('articles:write', (_event, siteId, filename, data, content) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_articles', filename);
+        return mdService.write(filePath, data, content);
+    });
+    ipcMain.handle('articles:remove', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_articles', filename);
+        mdService.remove(filePath);
+        logService.append('info', 'sites', '文章已删除', { siteId, filename });
+        return { success: true };
+    });
 }
 
 let mainWindow = null;

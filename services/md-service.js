@@ -64,17 +64,21 @@ function list(dir) {
             .map(item => {
                 const fullPath = path.join(dir, item.name);
                 const stat = fs.statSync(fullPath);
-                // 快速读取 frontmatter title
-                let title = '';
+                // 快速读取 frontmatter
+                let frontmatter = {};
                 try {
                     const raw = fs.readFileSync(fullPath, 'utf-8');
                     const parsed = grayMatter(raw);
-                    title = parsed.data?.title || '';
+                    frontmatter = parsed.data || {};
                 } catch {}
                 return {
                     name: item.name,
                     slug: item.name.replace(/\.md$/, ''),
-                    title,
+                    title: frontmatter.title || frontmatter.name || '',
+                    model: frontmatter.model || '',
+                    category: frontmatter.category || '',
+                    tags: frontmatter.tags || [],
+                    status: frontmatter.status,
                     size: stat.size,
                     mtime: stat.mtimeMs,
                 };
