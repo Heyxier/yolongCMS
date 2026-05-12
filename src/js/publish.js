@@ -158,11 +158,22 @@
         const repoDir = site.id;
 
         // 第二步：锁定 UI，显示加载遮罩
-        showOverlay('⏳ 正在提交本地变更...', 'git add + commit', repoDir);
+        showOverlay('⏳ 正在同步远程代码...', 'git pull', repoDir);
         document.getElementById('btnCommitPush').disabled = true;
 
         try {
-            // 第三步：add + commit
+            // 第三步：先 pull 保证本地为最新
+            updateOverlay('⏳ 正在同步远程代码...', 'git pull');
+            const pullR = await window.yolongcms.git.pull(repoDir);
+            if (!pullR.success && pullR.error && pullR.error.includes('conflict')) {
+                hideOverlay();
+                showToast('❌ 同步失败: 存在冲突，请手动解决');
+                document.getElementById('btnCommitPush').disabled = false;
+                return;
+            }
+
+            // 第四步：add + commit
+            updateOverlay('⏳ 正在提交本地变更...', 'git add + commit');
             const commitR = await window.yolongcms.git.commit(repoDir, msg);
             if (!commitR.success) {
                 hideOverlay();
@@ -173,7 +184,7 @@
 
             updateOverlay('✅ 提交成功 (' + commitR.commitHash.substring(0, 7) + ')', '⏳ 正在推送到远程...');
 
-            // 第四步：使用 Token 认证推送
+            // 第五步：使用 Token 认证推送
             const pushR = await window.yolongcms.git.pushAuth(repoDir);
             if (pushR.success) {
                 updateOverlay('', '✅ 推送成功！');

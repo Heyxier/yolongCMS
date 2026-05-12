@@ -86,6 +86,9 @@
 
         // 通知所有页面站点已切换
         window.dispatchEvent(new CustomEvent('siteChanged', { detail: { site } }));
+
+        // 自动同步：拉取远程最新代码
+        autoSync(siteId);
     }
 
     // ===== 刷新站点列表（从文件重新读取） =====
@@ -253,6 +256,48 @@
         }
     }
 
+    // ===== 自动同步：连上站点时拉取最新代码 =====
+    let syncTimer = null;
+
+    function autoSync(siteId) {
+        const $status = document.getElementById('syncStatus');
+        if (!$status) return;
+
+        // 显示同步中
+        $status.className = 'sync-status syncing';
+        $status.textContent = '🔄 同步中...';
+        clearTimeout(syncTimer);
+
+        if (!window.yolongcms || !window.yolongcms.git) {
+            $status.textContent = '';
+            $status.className = 'sync-status';
+            return;
+        }
+
+        window.yolongcms.git.pull(siteId).then(result => {
+            if (result.success) {
+                $status.textContent = '✅ 已同步';
+                $status.className = 'sync-status synced';
+            } else {
+                // 拉取失败不阻断操作，静默提示
+                $status.textContent = '⚠️ 同步失败';
+                $status.className = 'sync-status sync-fail';
+            }
+            // 3 秒后清除状态
+            syncTimer = setTimeout(() => {
+                $status.textContent = '';
+                $status.className = 'sync-status';
+            }, 3000);
+        }).catch(() => {
+            $status.textContent = '⚠️ 同步失败';
+            $status.className = 'sync-status sync-fail';
+            syncTimer = setTimeout(() => {
+                $status.textContent = '';
+                $status.className = 'sync-status';
+            }, 3000);
+        });
+    }
+
     // ===== 暴露给其他模块的 API =====
     // sites.js 等可以通过 window.__app 访问
     window.__app = {
@@ -304,6 +349,11 @@
 
         updateTopbar();
         renderDropdown();
+
+        // 启动时自动同步（如果已选中站点）
+        if (!needsSetup && currentSite) {
+            autoSync(currentSite.id);
+        }
 
         // 检测服务器状态
         checkServerStatus();

@@ -102,6 +102,33 @@ html, body {
 .status-dot.online  { background: var(--success); box-shadow: 0 0 6px var(--success); }
 .status-dot.offline { background: var(--text-muted); }
 
+/* 同步状态指示 */
+.sync-status {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 80px;
+    text-align: right;
+    transition: all 0.3s;
+}
+
+.sync-status.syncing {
+    color: var(--accent);
+    animation: sync-pulse 1.2s ease-in-out infinite;
+}
+
+.sync-status.synced {
+    color: var(--success);
+}
+
+.sync-status.sync-fail {
+    color: var(--warning);
+}
+
+@keyframes sync-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* 图标按钮 */
 .btn-icon {
     background: none;
