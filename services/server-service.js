@@ -1,42 +1,114 @@
 // YolongCMS — 服务器通信服务
 // 与 api.yolongtec.com 通信，拉取/删除留言等
+// 使用 HTTP + HMAC 签名（绕过 TLS 阻断，签名防重放）
 const http = require('http');
-const https = require('https');
-const dns = require('dns');
+const crypto = require('crypto');
+const TOKEN = 'yolong-admin-2026';           // HMAC 密钥
+const SERVER = 'http://api.yolongtec.com';    // HTTP 通道
 
-// DNS 解析辅助函数（Promise 化）
-function dnsLookup(hostname) {
+/**
+ * 生成 HMAC-SHA256 签名
+ * @param {string} method  - HTTP 方法 (GET/POST/DELETE)
+ * @param {string} path    - API 路径 (不含 query)
+ * @param {number} ts      - Unix 时间戳
+ * @returns {string} hex 签名
+ */
+function sign(method, path, ts) {
+    const msg = `${method}:${path}:${ts}`;
+    return crypto.createHmac('sha256', TOKEN).update(msg).digest('hex');
+}
+
+/**
+ * 构建带 HMAC 签名的 URL
+ * @param {string} serverUrl - 服务器地址
+ * @param {string} method    - HTTP 方法
+ * @param {string} path      - API 路径
+ * @returns {string} 完整 URL
+ */
+function buildUrl(serverUrl, method, path) {
+    const base = (serverUrl || SERVER).replace(/\/+$/, '');
+    const ts = Math.floor(Date.now() / 1000);
+    const sig = sign(method, path, ts);
+    return `${base}${path}?t=${ts}&sig=${sig}`;
+}
+
+/**
+ * HTTP GET
+ */
+function httpGet(url, timeout = 15000) {
     return new Promise((resolve, reject) => {
-        dns.lookup(hostname, { all: true, family: 4 }, (err, addresses) => {
-            if (err) reject(err);
-            else resolve(addresses[0]?.address || hostname);
+        const parsedUrl = new URL(url);
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || 80,
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: 'GET',
+            agent: false,   // 禁用 keep-alive 连接池
+            timeout,
+        };
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(data);
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                }
+            });
         });
+        req.setTimeout(timeout, () => {
+            req.destroy();
+            reject(new Error('请求超时'));
+        });
+        req.on('error', reject);
+        req.end();
     });
 }
 
-const DEFAULT_SERVER = 'https://api.yolongtec.com';
-const DEFAULT_TOKEN = 'yolong-admin-2026';
-
 /**
- * 构建带 token 的 URL
+ * HTTP DELETE
  */
-function buildUrl(serverUrl, path, token) {
-    const base = (serverUrl || DEFAULT_SERVER).replace(/\/+$/, '');
-    const tk = token || DEFAULT_TOKEN;
-    return `${base}${path}${path.includes('?') ? '&' : '?'}token=${encodeURIComponent(tk)}`;
+function httpDelete(url, timeout = 15000) {
+    return new Promise((resolve, reject) => {
+        const parsedUrl = new URL(url);
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || 80,
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: 'DELETE',
+            agent: false,
+            timeout,
+        };
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(data);
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                }
+            });
+        });
+        req.setTimeout(timeout, () => {
+            req.destroy();
+            reject(new Error('请求超时'));
+        });
+        req.on('error', reject);
+        req.end();
+    });
 }
+
+// ===== 公开 API =====
 
 /**
  * 拉取站点留言列表
- * @param {string} serverUrl - 服务器地址
- * @param {string} siteId - 站点 ID
- * @param {string} [token] - 管理 token
- * @returns {Promise<{ success: boolean, messages?: Array, total?: number, error?: string }>}
  */
-async function fetchMessages(serverUrl, siteId, token) {
-    const url = buildUrl(serverUrl, `/api/messages/${siteId}`, token);
+async function fetchMessages(serverUrl, siteId, _tokenIgnored) {
+    const url = buildUrl(serverUrl, 'GET', `/api/messages/${siteId}`);
     try {
-        const data = await httpsGet(url);
+        const data = await httpGet(url);
         const parsed = JSON.parse(data);
         return {
             success: true,
@@ -50,15 +122,11 @@ async function fetchMessages(serverUrl, siteId, token) {
 
 /**
  * 删除单条留言
- * @param {string} serverUrl
- * @param {number} msgId
- * @param {string} [token]
- * @returns {Promise<{ success: boolean, error?: string }>}
  */
-async function deleteMessage(serverUrl, msgId, token) {
-    const url = buildUrl(serverUrl, `/api/messages/${msgId}`, token);
+async function deleteMessage(serverUrl, msgId, _tokenIgnored) {
+    const url = buildUrl(serverUrl, 'DELETE', `/api/messages/${msgId}`);
     try {
-        await httpsDelete(url);
+        await httpDelete(url);
         return { success: true };
     } catch (err) {
         return { success: false, error: err.message || '删除留言失败' };
@@ -67,21 +135,15 @@ async function deleteMessage(serverUrl, msgId, token) {
 
 /**
  * 服务器健康检查
- * @param {string} serverUrl
- * @param {number} [timeout=15000]
- * @param {number} [retries=2]
- * @param {string} [token]
- * @returns {Promise<{ success: boolean, error?: string }>}
  */
-async function healthCheck(serverUrl, timeout = 15000, retries = 2, token) {
-    const url = buildUrl(serverUrl, '/health', token);
+async function healthCheck(serverUrl, timeout = 15000, retries = 2, _tokenIgnored) {
+    const url = buildUrl(serverUrl, 'GET', '/health');
     for (let i = 0; i <= retries; i++) {
         try {
-            await httpsGet(url, timeout);
+            await httpGet(url, timeout);
             return { success: true };
         } catch (err) {
             if (i < retries) {
-                // ECONNRESET 等网络错误等1秒再重试
                 await new Promise(r => setTimeout(r, 1000));
                 continue;
             }
@@ -89,92 +151,6 @@ async function healthCheck(serverUrl, timeout = 15000, retries = 2, token) {
         }
     }
     return { success: false, error: '健康检查异常' };
-}
-
-async function httpsGet(url, timeout = 15000) {
-    const isHttps = url.startsWith('https');
-    const mod = isHttps ? https : http;
-    const parsedUrl = new URL(url);
-    const originalHost = parsedUrl.hostname;
-
-    // DNS 解析：获取 IP 地址，绕过 SNI 过滤
-    let ip = originalHost;
-    try {
-        ip = await dnsLookup(originalHost);
-    } catch (_) { /* 解析失败则使用原始 hostname */ }
-
-    return new Promise((resolve, reject) => {
-        const options = {
-            hostname: ip,
-            servername: originalHost,   // TLS SNI + 证书验证用原始域名
-            port: parsedUrl.port || (isHttps ? 443 : 80),
-            path: parsedUrl.pathname + parsedUrl.search,
-            method: 'GET',
-            agent: false,               // 禁用 keep-alive 连接池
-            rejectUnauthorized: true,
-            timeout,
-        };
-        const req = mod.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                if (res.statusCode >= 200 && res.statusCode < 300) {
-                    resolve(data);
-                } else {
-                    reject(new Error(`HTTP ${res.statusCode}`));
-                }
-            });
-        });
-        req.setTimeout(timeout, () => {
-            req.destroy();
-            reject(new Error('请求超时'));
-        });
-        req.on('error', reject);
-        req.end();
-    });
-}
-
-async function httpsDelete(url, timeout = 15000) {
-    const isHttps = url.startsWith('https');
-    const mod = isHttps ? https : http;
-    const parsedUrl = new URL(url);
-    const originalHost = parsedUrl.hostname;
-
-    // DNS 解析：获取 IP 地址，绕过 SNI 过滤
-    let ip = originalHost;
-    try {
-        ip = await dnsLookup(originalHost);
-    } catch (_) { /* 解析失败则使用原始 hostname */ }
-
-    return new Promise((resolve, reject) => {
-        const options = {
-            hostname: ip,
-            servername: originalHost,   // TLS SNI + 证书验证用原始域名
-            port: parsedUrl.port || (isHttps ? 443 : 80),
-            path: parsedUrl.pathname + parsedUrl.search,
-            method: 'DELETE',
-            agent: false,               // 禁用 keep-alive 连接池
-            rejectUnauthorized: true,
-            timeout,
-        };
-        const req = mod.request(options, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                if (res.statusCode >= 200 && res.statusCode < 300) {
-                    resolve(data);
-                } else {
-                    reject(new Error(`HTTP ${res.statusCode}`));
-                }
-            });
-        });
-        req.setTimeout(timeout, () => {
-            req.destroy();
-            reject(new Error('请求超时'));
-        });
-        req.on('error', reject);
-        req.end();
-    });
 }
 
 module.exports = { fetchMessages, deleteMessage, healthCheck };

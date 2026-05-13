@@ -12,6 +12,8 @@ import json
 import sqlite3
 import os
 import time
+import hmac
+import hashlib
 import httpx
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -179,14 +181,45 @@ class ContactHandler(BaseHTTPRequestHandler):
             self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
     
     def _check_token(self):
-        """管理 API token 验证（URL 参数 ?token=xxx 或 Authorization: Bearer xxx）"""
+        """管理 API token 验证
+        支持三种方式：
+          1. ?token=xxx        — 静态 Token（向后兼容）
+          2. Authorization: Bearer xxx  — Header Token
+          3. ?t=时间戳&sig=签名  — HMAC 签名（防重放，推荐）
+        """
         parsed = urlparse(self.path)
         params = parse_qs(parsed.query)
+        
+        # 方式1+2: 静态 token
         query_token = params.get("token", [None])[0]
         auth_header = self.headers.get("Authorization", "")
         header_token = auth_header.replace("Bearer ", "").strip()
         token = query_token or header_token
-        return token == ADMIN_TOKEN
+        if token and token == ADMIN_TOKEN:
+            return True
+        
+        # 方式3: HMAC 签名验证
+        sig = params.get("sig", [None])[0]
+        ts = params.get("t", [None])[0]
+        if sig and ts:
+            try:
+                ts_int = int(ts)
+                now = int(time.time())
+                # 时间戳 ±5 分钟内有效（防重放）
+                if abs(now - ts_int) > 300:
+                    return False
+                # method 从 self.command 获取（GET/POST/DELETE）
+                msg = f"{self.command}:{parsed.path}:{ts}"
+                expected = hmac.new(
+                    ADMIN_TOKEN.encode(),
+                    msg.encode(),
+                    hashlib.sha256
+                ).hexdigest()
+                return hmac.compare_digest(expected, sig)
+            except (ValueError, TypeError):
+                return False
+        
+        return False
     
     def do_OPTIONS(self):
         self.send_response(204)
