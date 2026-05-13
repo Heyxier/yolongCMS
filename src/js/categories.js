@@ -34,14 +34,14 @@
             const ymlData = ymlR.success ? (ymlR.data || {}) : {};
 
             // 从产品/文章文件扫描到的分类
-            const catFiles = {}; // { name: { products: Set, articles: Set } }
-            function addFileCat(name, type) {
+            const catFiles = {}; // { name: { products: Set<filename>, articles: Set<filename> } }
+            function addFileCat(name, type, filename) {
                 if (!name) return;
                 if (!catFiles[name]) catFiles[name] = { products: new Set(), articles: new Set() };
-                catFiles[name][type].add(true);
+                catFiles[name][type].add(filename);
             }
-            (pR.files || []).forEach(f => addFileCat(f.category, 'products'));
-            (aR.files || []).forEach(f => addFileCat(f.category, 'articles'));
+            (pR.files || []).forEach(f => addFileCat(f.category, 'products', f.name));
+            (aR.files || []).forEach(f => addFileCat(f.category, 'articles', f.name));
 
             // 合并：YAML 中的分类优先，并补充文件扫描到的额外分类
             const allNames = new Set([...Object.keys(ymlData), ...Object.keys(catFiles)]);
