@@ -11,8 +11,9 @@
     const DEFAULT_TOKEN = 'yolong-admin-2026';
 
     function getServerUrl() {
-        const site = getActiveSite();
-        return site && site.server ? site.server : undefined;
+        // 统一使用 server-service.js 中的 SERVER 常量
+        // 忽略站点配置中的 server 字段，避免旧域名干扰
+        return undefined;
     }
 
     function getActiveSite() {
