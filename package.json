@@ -5,7 +5,37 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "pack": "electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.yolongtec.yolongcms",
+    "productName": "YolongCMS",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "YolongCMS",
+      "unicode": true
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ]
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -14,6 +44,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
   }
 }
