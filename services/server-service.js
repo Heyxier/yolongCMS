@@ -4,7 +4,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const TOKEN = 'yolong-admin-2026';           // HMAC 密钥
-const SERVER = 'http://47.100.81.126:8123';   // 直连 IP（域名未 ICP 备案被阿里云拦截，需用 IP 绕过）
+const SERVER = 'http://47.100.81.126';   // 通过 Nginx 80 端口反代到后端 8123（域名 ICP 拦截 + 8123 被墙）
 
 /**
  * 生成 HMAC-SHA256 签名
