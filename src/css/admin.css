@@ -331,6 +331,17 @@ html, body {
     color: #fff;
 }
 
+.btn-secondary-outline {
+    background: transparent;
+    color: var(--text-secondary, #999);
+    border: 1px solid var(--border-color, #444);
+}
+
+.btn-secondary-outline:hover {
+    background: var(--bg-tertiary, #333);
+    color: var(--text-primary, #eee);
+}
+
 .btn-sm {
     padding: 5px 12px;
     font-size: 12px;

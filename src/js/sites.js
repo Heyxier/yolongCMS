@@ -4,6 +4,7 @@
 
     // ===== 数据 =====
     let sites = [];
+    let editSiteIndex = -1;  // -1 表示添加模式，>=0 表示编辑模式
 
     // ===== 表单临时缓存（防止切换窗口误关弹窗丢失数据） =====
     let formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
@@ -20,6 +21,7 @@
         els.modalClose = document.getElementById('modalClose');
         els.modalCancel = document.getElementById('modalCancel');
         els.modalConfirm = document.getElementById('modalConfirm');
+        els.modalTitle = document.getElementById('modalTitle');
         els.inputName = document.getElementById('inputName');
         els.inputId = document.getElementById('inputId');
         els.inputRepo = document.getElementById('inputRepo');
@@ -74,6 +76,7 @@
                         </div>
                         <div class="site-actions">
                             ${isActive ? '' : '<button class="btn btn-primary-outline btn-sm" data-index="' + index + '" data-action="select">设为当前</button>'}
+                            <button class="btn btn-secondary-outline btn-sm" data-index="${index}" data-action="edit">编辑</button>
                             <button class="btn btn-danger-outline btn-sm" data-index="${index}" data-action="delete">删除</button>
                         </div>
                     </div>
@@ -96,24 +99,57 @@
                     }
                 });
             });
+
+            // 绑定编辑事件
+            els.list.querySelectorAll('[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openEditModal(parseInt(btn.dataset.index));
+                });
+            });
         } catch (err) {
             console.error('[YolongCMS] render error:', err);
         }
     }
 
-    // ===== 添加站点 =====
+    // ===== 添加/编辑站点 =====
     function openAddModal() {
-        // 从缓存恢复表单数据（防止切换窗口误关后丢失）
+        editSiteIndex = -1;
+        // 重置表单
         els.inputName.value = formCache.name;
         els.inputId.value = formCache.id;
+        els.inputId.readOnly = false;
+        els.inputId.style.background = '';
         els.inputRepo.value = formCache.repo;
         els.inputBranch.value = formCache.branch || 'main';
         els.inputServer.value = formCache.server;
+        if (els.modalTitle) els.modalTitle.textContent = '添加站点';
+        els.overlay.style.display = 'flex';
+        setTimeout(() => els.inputName.focus(), 100);
+    }
+
+    function openEditModal(index) {
+        const site = sites[index];
+        if (!site) return;
+        editSiteIndex = index;
+        els.inputName.value = site.name;
+        els.inputId.value = site.id;
+        els.inputId.readOnly = true;
+        els.inputId.style.background = 'var(--bg-tertiary, #2a2a2a)';
+        els.inputRepo.value = site.repo;
+        els.inputBranch.value = site.branch || 'main';
+        els.inputServer.value = site.server || '';
+        if (els.modalTitle) els.modalTitle.textContent = '编辑站点';
         els.overlay.style.display = 'flex';
         setTimeout(() => els.inputName.focus(), 100);
     }
 
     function closeModal() {
+        editSiteIndex = -1;
+        // 恢复 ID 输入框为可编辑状态
+        if (els.inputId) {
+            els.inputId.readOnly = false;
+            els.inputId.style.background = '';
+        }
         // 关闭前保存表单数据到缓存（防误关丢数据）
         if (els.inputName) formCache.name = els.inputName.value;
         if (els.inputId) formCache.id = els.inputId.value;
@@ -139,6 +175,19 @@
             if (!/^https?:\/\/.+/.test(repo)) { showToast('仓库地址格式不正确，需以 http:// 或 https:// 开头'); return; }
             if (server && !/^https?:\/\/.+/.test(server)) { showToast('API 服务器地址格式不正确，需以 http:// 或 https:// 开头'); return; }
 
+            if (editSiteIndex >= 0) {
+                // ===== 编辑模式 =====
+                sites[editSiteIndex] = { id, name, repo, branch, server };
+                await saveSites();
+                formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
+                if (window.__app) window.__app.refreshSites();
+                render();
+                closeModal();
+                showToast('✅ 站点 "' + name + '" 已更新');
+                return;
+            }
+
+            // ===== 添加模式 =====
             // 检查 ID 是否已存在
             if (sites.some(s => s.id === id)) {
                 showToast('站点 ID "' + id + '" 已存在');
