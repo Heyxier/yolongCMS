@@ -53,6 +53,7 @@ def init_db():
             email       TEXT NOT NULL,
             phone       TEXT DEFAULT '',
             message     TEXT NOT NULL,
+            source_url  TEXT DEFAULT '',
             ip_address  TEXT DEFAULT '',
             created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
             read        INTEGER DEFAULT 0
@@ -62,6 +63,11 @@ def init_db():
         CREATE INDEX IF NOT EXISTS idx_messages_site
         ON messages(site_id, created_at)
     """)
+    # 兼容旧库：如果已有表但没有 source_url 列，补充添加
+    try:
+        conn.execute("ALTER TABLE messages ADD COLUMN source_url TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass  # 列已存在，忽略
     conn.commit()
     conn.close()
 
@@ -226,10 +232,10 @@ class ContactHandler(BaseHTTPRequestHandler):
             # 写入数据库
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.execute(
-                "INSERT INTO messages (site_id, name, company, email, phone, message, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO messages (site_id, name, company, email, phone, message, source_url, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (site_id, data["name"].strip(), data.get("company", "").strip(),
                  data["email"].strip(), data.get("phone", "").strip(),
-                 data["message"].strip(), client_ip)
+                 data["message"].strip(), data.get("source_url", "").strip(), client_ip)
             )
             msg_id = cursor.lastrowid
             conn.commit()
@@ -287,6 +293,7 @@ class ContactHandler(BaseHTTPRequestHandler):
                     "email": row["email"],
                     "phone": row["phone"],
                     "message": row["message"],
+                    "source_url": row["source_url"] or "",
                     "created_at": row["created_at"],
                     "read": bool(row["read"]),
                 })

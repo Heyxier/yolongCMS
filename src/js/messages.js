@@ -93,6 +93,7 @@
                         <div class="msg-card-contact">
                             <span>📧 ${escapeHtml(msg.email)}</span>
                             ${msg.phone ? '<span>📞 ' + escapeHtml(msg.phone) + '</span>' : ''}
+                            ${msg.source_url ? '<span class="msg-card-source">🔗 ' + escapeHtml(msg.source_url) + '</span>' : ''}
                         </div>
                         <div class="msg-card-preview">${escapeHtml(msg.message).substring(0, 120)}${msg.message.length > 120 ? '...' : ''}</div>
                     </div>
@@ -148,6 +149,7 @@
         document.getElementById('mdCompany').textContent = msg.company || '-';
         document.getElementById('mdEmail').textContent = msg.email || '-';
         document.getElementById('mdPhone').textContent = msg.phone || '-';
+        document.getElementById('mdSource').textContent = msg.source_url || '-';
         document.getElementById('mdTime').textContent = formatTime(msg.created_at) || '-';
         document.getElementById('mdMessage').textContent = msg.message || '';
         document.getElementById('messageDetailModal').style.display = 'flex';

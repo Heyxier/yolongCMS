@@ -2046,6 +2046,14 @@ code {
     font-size: 12px;
     color: var(--text-muted);
     margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+.msg-card-source {
+    color: var(--accent);
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .msg-card-preview {
