@@ -1,10 +1,10 @@
 // YolongCMS — 服务器通信服务
-// 与 api.yolongtec.com 通信，拉取/删除留言等
-// 使用 HTTP + HMAC 签名（绕过 TLS 阻断，签名防重放）
+// 与服务器通信，拉取/删除留言等
+// 使用 HTTP + HMAC 签名（因为 api.yolongtec.com 域名未在阿里云 ICP 备案，直接用 IP 直连）
 const http = require('http');
 const crypto = require('crypto');
 const TOKEN = 'yolong-admin-2026';           // HMAC 密钥
-const SERVER = 'http://api.yolongtec.com:8123';   // HTTP 通道（端口 8123 绕过 ICP 拦截）
+const SERVER = 'http://47.100.81.126:8123';   // 直连 IP（域名未 ICP 备案被阿里云拦截，需用 IP 绕过）
 
 /**
  * 生成 HMAC-SHA256 签名
