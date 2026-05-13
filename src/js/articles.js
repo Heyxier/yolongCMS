@@ -151,17 +151,47 @@
         const $toolbar = document.getElementById('richToolbar');
         if (!$toolbar) return;
 
+        // 标题下拉
+        const $heading = document.getElementById('richHeadingSelect');
+        if ($heading) {
+            $heading.addEventListener('change', () => {
+                const tag = $heading.value;
+                if (!tag) return;
+                document.execCommand('formatBlock', false, '<' + tag + '>');
+                document.getElementById('richContent').focus();
+                $heading.value = '';
+            });
+        }
+
         // 工具条按钮
         $toolbar.querySelectorAll('[data-cmd]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const cmd = btn.dataset.cmd;
-                if (cmd === 'source') {
-                    toggleSource();
-                } else if (cmd === 'image') {
-                    insertImage();
-                } else {
-                    document.execCommand(cmd, false, null);
-                    document.getElementById('richContent').focus();
+                const $content = document.getElementById('richContent');
+
+                switch (cmd) {
+                    case 'source':
+                        toggleSource();
+                        break;
+                    case 'image':
+                        insertImage();
+                        break;
+                    case 'link':
+                        const url = prompt('输入链接地址：', 'https://');
+                        if (url && url.trim()) {
+                            document.execCommand('createLink', false, url.trim());
+                            $content.focus();
+                        }
+                        break;
+                    case 'hr':
+                        document.execCommand('insertHorizontalRule', false, null);
+                        $content.focus();
+                        break;
+                    default:
+                        // bold, italic, underline, justifyLeft/Center/Right,
+                        // insertUnorderedList, insertOrderedList, removeFormat 等
+                        document.execCommand(cmd, false, null);
+                        $content.focus();
                 }
             });
         });

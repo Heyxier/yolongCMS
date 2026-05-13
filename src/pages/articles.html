@@ -91,14 +91,42 @@
                 <label>正文内容</label>
                 <div class="rich-editor">
                     <div class="rich-toolbar" id="richToolbar">
-                        <button type="button" class="rich-btn" data-cmd="bold" title="加粗"><b>B</b></button>
-                        <button type="button" class="rich-btn" data-cmd="italic" title="斜体"><i>I</i></button>
-                        <button type="button" class="rich-btn" data-cmd="heading" title="标题">H</button>
+                        <!-- 文本格式 -->
+                        <button type="button" class="rich-btn" data-cmd="bold" title="加粗 Ctrl+B"><b>B</b></button>
+                        <button type="button" class="rich-btn" data-cmd="italic" title="斜体 Ctrl+I"><i>I</i></button>
+                        <button type="button" class="rich-btn" data-cmd="underline" title="下划线 Ctrl+U"><u>U</u></button>
                         <span class="rich-divider"></span>
+
+                        <!-- 标题 -->
+                        <select class="rich-select" id="richHeadingSelect" title="标题格式">
+                            <option value="">标题…</option>
+                            <option value="h1">H1 标题 1</option>
+                            <option value="h2">H2 标题 2</option>
+                            <option value="h3">H3 标题 3</option>
+                            <option value="p">正文</option>
+                        </select>
+                        <span class="rich-divider"></span>
+
+                        <!-- 列表 & 引用 -->
                         <button type="button" class="rich-btn" data-cmd="insertUnorderedList" title="无序列表">☰</button>
                         <button type="button" class="rich-btn" data-cmd="insertOrderedList" title="有序列表">1.</button>
+                        <button type="button" class="rich-btn" data-cmd="blockquote" title="引用">❝</button>
                         <span class="rich-divider"></span>
+
+                        <!-- 对齐 -->
+                        <button type="button" class="rich-btn" data-cmd="justifyLeft" title="左对齐">◀</button>
+                        <button type="button" class="rich-btn" data-cmd="justifyCenter" title="居中">⬌</button>
+                        <button type="button" class="rich-btn" data-cmd="justifyRight" title="右对齐">▶</button>
+                        <span class="rich-divider"></span>
+
+                        <!-- 插入 -->
+                        <button type="button" class="rich-btn" data-cmd="link" title="插入链接">🔗</button>
                         <button type="button" class="rich-btn" data-cmd="image" title="插入图片">🖼️</button>
+                        <button type="button" class="rich-btn" data-cmd="hr" title="分割线">—</button>
+                        <span class="rich-divider"></span>
+
+                        <!-- 工具 -->
+                        <button type="button" class="rich-btn" data-cmd="removeFormat" title="清除格式">🧹</button>
                         <span class="rich-divider"></span>
                         <button type="button" class="rich-btn" data-cmd="source" title="源码" id="btnRichSource">&lt;/&gt;</button>
                     </div>
