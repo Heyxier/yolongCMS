@@ -2,6 +2,17 @@
 // 与 api.yolongtec.com 通信，拉取/删除留言等
 const http = require('http');
 const https = require('https');
+const dns = require('dns');
+
+// DNS 解析辅助函数（Promise 化）
+function dnsLookup(hostname) {
+    return new Promise((resolve, reject) => {
+        dns.lookup(hostname, { all: true, family: 4 }, (err, addresses) => {
+            if (err) reject(err);
+            else resolve(addresses[0]?.address || hostname);
+        });
+    });
+}
 
 const DEFAULT_SERVER = 'https://api.yolongtec.com';
 const DEFAULT_TOKEN = 'yolong-admin-2026';
@@ -80,19 +91,27 @@ async function healthCheck(serverUrl, timeout = 15000, retries = 2, token) {
     return { success: false, error: '健康检查异常' };
 }
 
-function httpsGet(url, timeout = 15000) {
+async function httpsGet(url, timeout = 15000) {
+    const isHttps = url.startsWith('https');
+    const mod = isHttps ? https : http;
+    const parsedUrl = new URL(url);
+    const originalHost = parsedUrl.hostname;
+
+    // DNS 解析：获取 IP 地址，绕过 SNI 过滤
+    let ip = originalHost;
+    try {
+        ip = await dnsLookup(originalHost);
+    } catch (_) { /* 解析失败则使用原始 hostname */ }
+
     return new Promise((resolve, reject) => {
-        const isHttps = url.startsWith('https');
-        const mod = isHttps ? https : http;
-        const parsedUrl = new URL(url);
         const options = {
-            hostname: parsedUrl.hostname,
+            hostname: ip,
+            servername: originalHost,   // TLS SNI + 证书验证用原始域名
             port: parsedUrl.port || (isHttps ? 443 : 80),
             path: parsedUrl.pathname + parsedUrl.search,
             method: 'GET',
-            agent: false,  // 禁用 keep-alive 连接池，避免 ECONNRESET
+            agent: false,               // 禁用 keep-alive 连接池
             rejectUnauthorized: true,
-            // 设置 socket 超时
             timeout,
         };
         const req = mod.request(options, (res) => {
@@ -115,17 +134,26 @@ function httpsGet(url, timeout = 15000) {
     });
 }
 
-function httpsDelete(url, timeout = 15000) {
+async function httpsDelete(url, timeout = 15000) {
+    const isHttps = url.startsWith('https');
+    const mod = isHttps ? https : http;
+    const parsedUrl = new URL(url);
+    const originalHost = parsedUrl.hostname;
+
+    // DNS 解析：获取 IP 地址，绕过 SNI 过滤
+    let ip = originalHost;
+    try {
+        ip = await dnsLookup(originalHost);
+    } catch (_) { /* 解析失败则使用原始 hostname */ }
+
     return new Promise((resolve, reject) => {
-        const isHttps = url.startsWith('https');
-        const mod = isHttps ? https : http;
-        const parsedUrl = new URL(url);
         const options = {
-            hostname: parsedUrl.hostname,
+            hostname: ip,
+            servername: originalHost,   // TLS SNI + 证书验证用原始域名
             port: parsedUrl.port || (isHttps ? 443 : 80),
             path: parsedUrl.pathname + parsedUrl.search,
             method: 'DELETE',
-            agent: false,  // 禁用 keep-alive 连接池，避免 ECONNRESET
+            agent: false,               // 禁用 keep-alive 连接池
             rejectUnauthorized: true,
             timeout,
         };
