@@ -47,8 +47,9 @@ contextBridge.exposeInMainWorld('yolongcms', {
 
     // ===== 服务器通信 =====
     server: {
-        messages: (serverUrl, siteId) => ipcRenderer.invoke('server:messages', serverUrl, siteId),
-        health: (serverUrl) => ipcRenderer.invoke('server:health', serverUrl),
+        messages: (serverUrl, siteId, token) => ipcRenderer.invoke('server:messages', serverUrl, siteId, token),
+        deleteMessage: (serverUrl, msgId, token) => ipcRenderer.invoke('server:delete-message', serverUrl, msgId, token),
+        health: (serverUrl, token) => ipcRenderer.invoke('server:health', serverUrl, token),
     },
 
     // IPC 通信桥

@@ -24,6 +24,7 @@ HOST = "0.0.0.0"
 PORT = 8123
 RATE_LIMIT = 5        # 每小时每个 IP 允许的请求数
 RATE_WINDOW = 3600    # 窗口时间（秒）
+ADMIN_TOKEN = os.environ.get("CONTACT_ADMIN_TOKEN", "yolong-admin-2026")  # 管理 API 鉴权
 
 # QQ Bot 推送配置
 QQ_APP_ID = os.environ.get("QQ_APP_ID", "1903939537")
@@ -169,7 +170,17 @@ class ContactHandler(BaseHTTPRequestHandler):
         if origin in CORS_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    
+    def _check_token(self):
+        """管理 API token 验证（URL 参数 ?token=xxx 或 Authorization: Bearer xxx）"""
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        query_token = params.get("token", [None])[0]
+        auth_header = self.headers.get("Authorization", "")
+        header_token = auth_header.replace("Bearer ", "").strip()
+        token = query_token or header_token
+        return token == ADMIN_TOKEN
     
     def do_OPTIONS(self):
         self.send_response(204)
@@ -250,6 +261,9 @@ class ContactHandler(BaseHTTPRequestHandler):
         
         # GET /api/messages/{site_id}
         if path.startswith("/api/messages/"):
+            if not self._check_token():
+                self._send_json(401, {"error": "unauthorized"})
+                return
             site_id = path.split("/api/messages/")[-1]
             if not site_id:
                 self._send_json(400, {"error": "missing site_id"})
@@ -292,6 +306,9 @@ class ContactHandler(BaseHTTPRequestHandler):
         
         # DELETE /api/messages/{id}
         if path.startswith("/api/messages/"):
+            if not self._check_token():
+                self._send_json(401, {"error": "unauthorized"})
+                return
             msg_id = path.split("/api/messages/")[-1]
             try:
                 msg_id = int(msg_id)

@@ -204,11 +204,14 @@ function registerIpcHandlers() {
     });
 
     // ===== 服务器通信 =====
-    ipcMain.handle('server:messages', async (_event, serverUrl, siteId) => {
-        return await serverService.fetchMessages(serverUrl, siteId);
+    ipcMain.handle('server:messages', async (_event, serverUrl, siteId, token) => {
+        return await serverService.fetchMessages(serverUrl, siteId, token);
     });
-    ipcMain.handle('server:health', async (_event, serverUrl) => {
-        return await serverService.healthCheck(serverUrl);
+    ipcMain.handle('server:delete-message', async (_event, serverUrl, msgId, token) => {
+        return await serverService.deleteMessage(serverUrl, msgId, token);
+    });
+    ipcMain.handle('server:health', async (_event, serverUrl, token) => {
+        return await serverService.healthCheck(serverUrl, 15000, 2, token);
     });
 
     // ===== 日志服务 =====

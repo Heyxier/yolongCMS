@@ -1,5 +1,55 @@
-<div class="page-placeholder">
+<!-- 留言管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>✉️ 留言管理</h2>
+        <p class="page-subtitle" id="messagesSubtitle">查看网站访客提交的联系表单留言</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-primary" id="btnRefreshMessages">🔄 刷新</button>
+    </div>
+</div>
+
+<!-- 留言统计 -->
+<div class="messages-stats" id="messagesStats">共 0 条留言</div>
+
+<!-- 留言列表 -->
+<div class="messages-list" id="messagesList"></div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="messagesEmpty" style="display:none;">
     <div class="placeholder-icon">✉️</div>
-    <h2>留言管理</h2>
-    <p>留言查看功能将在下一阶段开发</p>
+    <h3>暂无留言</h3>
+    <p id="messagesEmptyText">当前站点还没有收到任何留言</p>
+</div>
+
+<!-- 加载状态 -->
+<div class="empty-state" id="messagesLoading" style="display:none;">
+    <div class="placeholder-icon">⏳</div>
+    <h3>加载中</h3>
+    <p>正在拉取留言数据...</p>
+</div>
+
+<!-- 留言详情弹窗 -->
+<div class="modal-overlay" id="messageDetailModal" style="display:none;">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+            <h3 id="messageDetailTitle">留言详情</h3>
+            <button class="btn-icon modal-close" id="messageDetailClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="msg-detail-row"><span class="msg-detail-label">姓名</span><span id="mdName"></span></div>
+            <div class="msg-detail-row"><span class="msg-detail-label">公司</span><span id="mdCompany"></span></div>
+            <div class="msg-detail-row"><span class="msg-detail-label">邮箱</span><span id="mdEmail"></span></div>
+            <div class="msg-detail-row"><span class="msg-detail-label">电话</span><span id="mdPhone"></span></div>
+            <div class="msg-detail-row"><span class="msg-detail-label">时间</span><span id="mdTime"></span></div>
+            <div class="msg-detail-divider"></div>
+            <div class="msg-detail-section">
+                <div class="msg-detail-label">留言内容</div>
+                <div class="msg-detail-content" id="mdMessage"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="messageDetailCancel">关闭</button>
+        </div>
+    </div>
 </div>
