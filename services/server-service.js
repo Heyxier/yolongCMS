@@ -4,7 +4,7 @@
 const http = require('http');
 const crypto = require('crypto');
 const TOKEN = 'yolong-admin-2026';           // HMAC 密钥
-const SERVER = 'http://api.yolongtec.com';    // HTTP 通道
+const SERVER = 'http://api.yolongtec.com:8123';   // HTTP 通道（端口 8123 绕过 ICP 拦截）
 
 /**
  * 生成 HMAC-SHA256 签名
