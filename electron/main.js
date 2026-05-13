@@ -478,6 +478,22 @@ function registerIpcHandlers() {
         return { success: true, updated: totalUpdated };
     });
 
+    // 读取分类数据（_data/categories.yml）
+    ipcMain.handle('categories:read', async (_event, siteId) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_data', 'categories.yml');
+        return await ymlService.read(filePath);
+    });
+
+    // 写入分类数据（_data/categories.yml）
+    ipcMain.handle('categories:write', async (_event, siteId, data) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_data', 'categories.yml');
+        const r = ymlService.write(filePath, data);
+        if (r.success) {
+            logService.append('info', 'sites', `分类数据已更新 (${Object.keys(data).length} 个分类)`, { siteId, count: Object.keys(data).length });
+        }
+        return r;
+    });
+
     // ===== 图片管理 =====
     const IMAGE_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico'];
 

@@ -331,6 +331,16 @@ html, body {
     color: #fff;
 }
 
+.btn-danger {
+    background: var(--danger);
+    color: #fff;
+    border: 1px solid var(--danger);
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
 .btn-secondary-outline {
     background: transparent;
     color: var(--text-secondary, #999);
@@ -1378,6 +1388,12 @@ html, body {
 
 .cat-table tbody tr:hover td {
     background: var(--bg-hover);
+}
+
+.cat-actions {
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
 }
 
 /* ===== 发布管理 ===== */

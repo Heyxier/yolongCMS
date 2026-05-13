@@ -95,6 +95,8 @@ contextBridge.exposeInMainWorld('yolongcms', {
     // ===== 分类管理 =====
     categories: {
         rename: (siteId, oldName, newName) => ipcRenderer.invoke('categories:rename', siteId, oldName, newName),
+        read: (siteId) => ipcRenderer.invoke('categories:read', siteId),
+        write: (siteId, data) => ipcRenderer.invoke('categories:write', siteId, data),
     },
 
     // ===== 用户配置 =====
