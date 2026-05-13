@@ -70,6 +70,7 @@ async function healthCheck(serverUrl, timeout = 15000, retries = 2, token) {
             return { success: true };
         } catch (err) {
             if (i < retries) {
+                // ECONNRESET 等网络错误等1秒再重试
                 await new Promise(r => setTimeout(r, 1000));
                 continue;
             }
@@ -81,32 +82,17 @@ async function healthCheck(serverUrl, timeout = 15000, retries = 2, token) {
 
 function httpsGet(url, timeout = 15000) {
     return new Promise((resolve, reject) => {
-        const mod = url.startsWith('https') ? https : http;
-        const req = mod.get(url, { timeout }, (res) => {
-            let data = '';
-            res.on('data', chunk => data += chunk);
-            res.on('end', () => {
-                if (res.statusCode >= 200 && res.statusCode < 300) {
-                    resolve(data);
-                } else {
-                    reject(new Error(`HTTP ${res.statusCode}`));
-                }
-            });
-        });
-        req.on('error', reject);
-        req.on('timeout', () => { req.destroy(); reject(new Error('请求超时')); });
-    });
-}
-
-function httpsDelete(url, timeout = 15000) {
-    return new Promise((resolve, reject) => {
-        const mod = url.startsWith('https') ? https : http;
+        const isHttps = url.startsWith('https');
+        const mod = isHttps ? https : http;
         const parsedUrl = new URL(url);
         const options = {
             hostname: parsedUrl.hostname,
-            port: parsedUrl.port,
+            port: parsedUrl.port || (isHttps ? 443 : 80),
             path: parsedUrl.pathname + parsedUrl.search,
-            method: 'DELETE',
+            method: 'GET',
+            agent: false,  // 禁用 keep-alive 连接池，避免 ECONNRESET
+            rejectUnauthorized: true,
+            // 设置 socket 超时
             timeout,
         };
         const req = mod.request(options, (res) => {
@@ -120,8 +106,45 @@ function httpsDelete(url, timeout = 15000) {
                 }
             });
         });
+        req.setTimeout(timeout, () => {
+            req.destroy();
+            reject(new Error('请求超时'));
+        });
         req.on('error', reject);
-        req.on('timeout', () => { req.destroy(); reject(new Error('请求超时')); });
+        req.end();
+    });
+}
+
+function httpsDelete(url, timeout = 15000) {
+    return new Promise((resolve, reject) => {
+        const isHttps = url.startsWith('https');
+        const mod = isHttps ? https : http;
+        const parsedUrl = new URL(url);
+        const options = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || (isHttps ? 443 : 80),
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: 'DELETE',
+            agent: false,  // 禁用 keep-alive 连接池，避免 ECONNRESET
+            rejectUnauthorized: true,
+            timeout,
+        };
+        const req = mod.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
+                    resolve(data);
+                } else {
+                    reject(new Error(`HTTP ${res.statusCode}`));
+                }
+            });
+        });
+        req.setTimeout(timeout, () => {
+            req.destroy();
+            reject(new Error('请求超时'));
+        });
+        req.on('error', reject);
         req.end();
     });
 }
