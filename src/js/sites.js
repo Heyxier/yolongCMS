@@ -21,6 +21,7 @@
         els.modalClose = document.getElementById('modalClose');
         els.modalCancel = document.getElementById('modalCancel');
         els.modalConfirm = document.getElementById('modalConfirm');
+        els.modalConfirmText = document.getElementById('modalConfirmText');
         els.modalTitle = document.getElementById('modalTitle');
         els.inputName = document.getElementById('inputName');
         els.inputId = document.getElementById('inputId');
@@ -123,6 +124,7 @@
         els.inputBranch.value = formCache.branch || 'main';
         els.inputServer.value = formCache.server;
         if (els.modalTitle) els.modalTitle.textContent = '添加站点';
+        if (els.modalConfirmText) els.modalConfirmText.textContent = '确认添加';
         els.overlay.style.display = 'flex';
         setTimeout(() => els.inputName.focus(), 100);
     }
@@ -139,6 +141,7 @@
         els.inputBranch.value = site.branch || 'main';
         els.inputServer.value = site.server || '';
         if (els.modalTitle) els.modalTitle.textContent = '编辑站点';
+        if (els.modalConfirmText) els.modalConfirmText.textContent = '确认修改';
         els.overlay.style.display = 'flex';
         setTimeout(() => els.inputName.focus(), 100);
     }
