@@ -68,18 +68,22 @@
         }
         $empty.style.display = 'none';
 
-        let html = '<table class="cat-table"><thead><tr><th>分类名称</th><th>ID</th><th>中文标题</th><th>产品数</th><th>文章数</th><th>操作</th></tr></thead><tbody>';
+        let html = '<table class="cat-table"><thead><tr><th>分类名称</th><th>ID</th><th>中文标题</th><th>封面图</th><th>产品数</th><th>文章数</th><th>排序</th><th>操作</th></tr></thead><tbody>';
         names.forEach(name => {
             const ymlEntry = ymlData[name] || {};
             const files = catFiles[name] || { products: new Set(), articles: new Set() };
             const pc = files.products.size;
             const ac = files.articles.size;
+            const img = ymlEntry.image || '';
             html += '<tr>'
                 + '<td><strong>' + escapeHtml(ymlEntry.name || name) + '</strong></td>'
                 + '<td><code>' + escapeHtml(name) + '</code></td>'
                 + '<td>' + escapeHtml(ymlEntry.title || '-') + '</td>'
+                + '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (img ? '<code>' + escapeHtml(img) + '</code>' : '<span style="color:var(--text-secondary)">(无)</span>') + '</td>'
                 + '<td>' + pc + '</td><td>' + ac + '</td>'
+                + '<td>' + (ymlEntry.order || 99) + '</td>'
                 + '<td class="cat-actions">'
+                + '<button class="btn btn-primary-outline btn-sm" data-cat="' + escapeHtml(name) + '" data-action="edit">编辑</button>'
                 + '<button class="btn btn-primary-outline btn-sm" data-cat="' + escapeHtml(name) + '" data-action="rename">重命名</button>'
                 + '<button class="btn btn-danger-outline btn-sm" data-cat="' + escapeHtml(name) + '" data-action="delete">删除</button>'
                 + '</td></tr>';
@@ -92,6 +96,9 @@
         });
         $wrap.querySelectorAll('[data-action="delete"]').forEach(btn => {
             btn.addEventListener('click', () => openDelete(btn.dataset.cat));
+        });
+        $wrap.querySelectorAll('[data-action="edit"]').forEach(btn => {
+            btn.addEventListener('click', () => openEdit(btn.dataset.cat));
         });
     }
 
@@ -151,6 +158,7 @@
         const slug = document.getElementById('catAddSlug').value.trim() || key;
         const title = document.getElementById('catAddTitle').value.trim();
         const desc = document.getElementById('catAddDesc').value.trim();
+        const image = document.getElementById('catAddImage').value.trim();
         const order = parseInt(document.getElementById('catAddOrder').value) || 99;
 
         if (!key) { document.getElementById('catAddError').textContent = '请输入分类 ID'; return; }
@@ -172,7 +180,7 @@
             }
 
             // 构建新条目
-            data[key] = { name, slug, title };
+            data[key] = { name, slug, title, image };
             if (desc) data[key].desc = desc;
             data[key].order = order;
 
@@ -250,6 +258,67 @@
         }
     }
 
+    // ===== 编辑分类 =====
+    function openEdit(name) {
+        const site = getSite();
+        if (!site) { showToast('请先选择一个站点'); return; }
+
+        (async () => {
+            const ymlR = await window.yolongcms.categories.read(site.id);
+            const data = ymlR.success ? (ymlR.data || {}) : {};
+            const entry = data[name] || {};
+
+            document.getElementById('catEditKey').value = name;
+            document.getElementById('catEditName').value = entry.name || '';
+            document.getElementById('catEditSlug').value = entry.slug || '';
+            document.getElementById('catEditTitle').value = entry.title || '';
+            document.getElementById('catEditDesc').value = entry.desc || '';
+            document.getElementById('catEditImage').value = entry.image || '';
+            document.getElementById('catEditOrder').value = entry.order || 99;
+            document.getElementById('catEditError').textContent = '';
+            document.getElementById('catEditModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('catEditName').focus(), 100);
+        })();
+    }
+
+    function closeEdit() { document.getElementById('catEditModal').style.display = 'none'; }
+
+    async function confirmEdit() {
+        const key = document.getElementById('catEditKey').value.trim();
+        const name = document.getElementById('catEditName').value.trim();
+        const slug = document.getElementById('catEditSlug').value.trim() || key;
+        const title = document.getElementById('catEditTitle').value.trim();
+        const desc = document.getElementById('catEditDesc').value.trim();
+        const image = document.getElementById('catEditImage').value.trim();
+        const order = parseInt(document.getElementById('catEditOrder').value) || 99;
+
+        if (!name) { document.getElementById('catEditError').textContent = '请输入显示名称'; return; }
+        if (!title) { document.getElementById('catEditError').textContent = '请输入中文标题'; return; }
+
+        const site = getSite();
+        if (!site) { showToast('请先选择一个站点'); return; }
+
+        try {
+            const ymlR = await window.yolongcms.categories.read(site.id);
+            let data = ymlR.success ? (ymlR.data || {}) : {};
+
+            data[key] = { name, slug, title, image };
+            if (desc) data[key].desc = desc;
+            data[key].order = order;
+
+            const wR = await window.yolongcms.categories.write(site.id, data);
+            if (wR.success) {
+                showToast('✅ 分类 "' + title + '" 已更新');
+                closeEdit();
+                loadCategories();
+            } else {
+                document.getElementById('catEditError').textContent = wR.error || '写入失败';
+            }
+        } catch (err) {
+            document.getElementById('catEditError').textContent = err.message;
+        }
+    }
+
     // ===== 事件绑定 =====
     function bindEvents() {
         // 重命名
@@ -288,6 +357,15 @@
         document.getElementById('catDeleteConfirm').addEventListener('click', confirmDelete);
         document.getElementById('catDeleteModal').addEventListener('keydown', e => {
             if (e.key === 'Escape') closeDelete();
+        });
+
+        // 编辑
+        document.getElementById('catEditClose').addEventListener('click', closeEdit);
+        document.getElementById('catEditCancel').addEventListener('click', closeEdit);
+        document.getElementById('catEditConfirm').addEventListener('click', confirmEdit);
+        document.getElementById('catEditModal').addEventListener('keydown', e => {
+            if (e.key === 'Enter') confirmEdit();
+            if (e.key === 'Escape') closeEdit();
         });
     }
 
