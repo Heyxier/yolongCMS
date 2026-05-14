@@ -8,6 +8,7 @@
         products:   { title: '产品',     icon: '📦' },
         articles:   { title: '文章',     icon: '📝' },
         categories: { title: '分类',     icon: '🏷️' },
+        featured:   { title: '首页推荐', icon: '⭐' },
         images:     { title: '图片',     icon: '🖼️' },
         messages:   { title: '留言',     icon: '✉️' },
         publish:    { title: '发布',     icon: '🚀' },

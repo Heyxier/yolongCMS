@@ -1,0 +1,66 @@
+<!-- 首页推荐管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>⭐ 首页推荐</h2>
+        <p class="page-subtitle">管理首页 Featured Products 展示内容</p>
+    </div>
+</div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="featEmpty" style="display:none;">
+    <div class="placeholder-icon">⭐</div>
+    <h3>请先选择一个站点</h3>
+    <p>选择站点后可管理首页推荐产品</p>
+</div>
+
+<div id="featContent" style="display:none;">
+    <!-- 添加推荐面板 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>➕ 添加推荐</h3>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+            <div class="form-group" style="flex:1;min-width:150px;">
+                <select id="featType" class="form-input">
+                    <option value="product">产品推荐</option>
+                    <option value="news" disabled>新闻推荐（即将开放）</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:1;min-width:200px;">
+                <input type="text" id="featTag" class="form-input" placeholder="标签（如 NEW ARRIVAL）" maxlength="30">
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="display:block;margin-bottom:8px;color:var(--text-muted);font-size:13px;">选择产品（可多选）：</label>
+            <div id="featProductList" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-color);border-radius:var(--radius-md);padding:8px;">
+                <div class="log-empty">加载中...</div>
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <button class="btn btn-primary" id="btnFeatAdd">➕ 添加到推荐</button>
+        </div>
+    </div>
+
+    <!-- 当前推荐列表 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>📌 当前推荐</h3>
+            <span class="section-badge" id="featCount">0 项</span>
+        </div>
+        <div class="pub-file-list" id="featList">
+            <div class="log-empty">暂无推荐产品</div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-secondary" id="btnFeatPreview">👁️ 预览首页效果</button>
+            <button class="btn btn-danger-outline btn-sm" id="btnFeatClear" style="margin-left:auto;">🗑️ 清空推荐</button>
+        </div>
+    </div>
+
+    <!-- 提示 -->
+    <div class="pub-section" style="background:transparent;border:none;padding:8px 0;">
+        <p style="color:var(--text-muted);font-size:12px;line-height:1.6;">
+            💡 推荐产品会展示在首页 Featured Products 区域，支持横向滚动浏览。<br>
+            修改后需通过「发布」页面提交并推送到 GitHub 才能生效。
+        </p>
+    </div>
+</div>
