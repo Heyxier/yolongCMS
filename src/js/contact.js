@@ -25,7 +25,6 @@
         document.getElementById('contactTitle').value = data.title || '';
         document.getElementById('contactDescription').value = data.description || '';
         document.getElementById('contactBgImage').value = data.bgImage || '';
-        document.getElementById('contactMapEmbed').value = data.map?.embedUrl || '';
 
         const $list = document.getElementById('contactInfoList');
         $list.innerHTML = '';
@@ -65,11 +64,6 @@
             info: [],
         };
 
-        const embedUrl = document.getElementById('contactMapEmbed').value.trim();
-        if (embedUrl) {
-            data.map = { embedUrl };
-        }
-
         const rows = document.querySelectorAll('#contactInfoList .contact-info-row');
         rows.forEach(row => {
             data.info.push({
@@ -92,9 +86,6 @@
                 { label: 'PHONE', value: '+86 400-888-6688' },
                 { label: 'EMAIL', value: 'sales@yolong.com' },
             ],
-            map: {
-                embedUrl: 'https://www.openstreetmap.org/export/embed.html?bbox=120.65%2C31.25%2C120.75%2C31.35&amp;layer=mapnik&amp;marker=31.30%2C120.70',
-            },
         };
     }
 
