@@ -549,6 +549,7 @@
             const d = r.data || {};
             document.getElementById('afTitle').value = d.title || '';
             document.getElementById('afCategory').value = d.category || '';
+            document.getElementById('afPlacement').value = d.placement || 'news';
             document.getElementById('afPublishedAt').value = d.publishedAt || '';
             document.getElementById('afStatus').checked = d.status !== false;
             updateStatusText();
@@ -569,6 +570,7 @@
         document.getElementById('modalArticleSave').textContent = '添加';
         document.getElementById('afTitle').value = '';
         document.getElementById('afCategory').value = '';
+        document.getElementById('afPlacement').value = 'news';
         document.getElementById('afPublishedAt').value = new Date().toISOString().split('T')[0];
         document.getElementById('afStatus').checked = true;
         updateStatusText();
@@ -606,6 +608,7 @@
         const data = {
             title,
             category,
+            placement: document.getElementById('afPlacement').value,
             publishedAt: document.getElementById('afPublishedAt').value || new Date().toISOString().split('T')[0],
             excerpt: document.getElementById('afExcerpt').value.trim(),
             coverImage: document.getElementById('afCoverImage').value.trim(),
