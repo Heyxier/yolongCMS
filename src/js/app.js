@@ -4,6 +4,7 @@
 
     // ===== 页面注册 =====
     const PAGES = {
+        about:      { title: '关于我们', icon: '🏢' },
         dashboard:  { title: '仪表盘',   icon: '📊' },
         products:   { title: '产品',     icon: '📦' },
         articles:   { title: '文章',     icon: '📝' },

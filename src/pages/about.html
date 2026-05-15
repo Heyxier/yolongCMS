@@ -1,0 +1,121 @@
+<!-- 关于我们管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>🏢 关于我们</h2>
+        <p class="page-subtitle">编辑 About Us 页面内容，修改后需通过「发布」页面提交推送</p>
+    </div>
+</div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="aboutEmpty" style="display:none;">
+    <div class="placeholder-icon">🏢</div>
+    <h3>请先选择一个站点</h3>
+    <p>选择站点后可编辑关于我们页面内容</p>
+</div>
+
+<div id="aboutContent" style="display:none;">
+    <!-- Hero -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>🔝 页面头部</h3>
+        </div>
+        <div class="form-group">
+            <label>副标题</label>
+            <input type="text" id="aboutHeroSubtitle" class="form-input" placeholder="Garden Power Tools &amp; OEM/ODM Solutions Since 2008">
+        </div>
+    </div>
+
+    <!-- Company Profile -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>📋 公司简介</h3>
+        </div>
+        <div class="form-group">
+            <label>图片路径</label>
+            <input type="text" id="aboutProfileImage" class="form-input" placeholder="../images/cordless-drill-hero.jpg">
+        </div>
+        <div class="form-group">
+            <label>第一段</label>
+            <textarea id="aboutProfileP1" class="form-input" rows="4" placeholder="第一段文字内容"></textarea>
+        </div>
+        <div class="form-group">
+            <label>第二段</label>
+            <textarea id="aboutProfileP2" class="form-input" rows="4" placeholder="第二段文字内容"></textarea>
+        </div>
+    </div>
+
+    <!-- Values -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>💎 核心价值观</h3>
+        </div>
+        <div id="aboutValues">
+            <div class="about-value-row" data-idx="0" style="border:1px solid var(--border-color);border-radius:var(--radius-md);padding:12px;margin-bottom:12px;">
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <div class="form-group" style="flex:0 0 60px;">
+                        <label>序号</label>
+                        <input type="text" class="form-input about-val-num" value="01">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>标题</label>
+                        <input type="text" class="form-input about-val-title" placeholder="GREAT QUALITY">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea class="form-input about-val-text" rows="3" placeholder="描述文字"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>🌍 全球业务</h3>
+        </div>
+        <div id="aboutGlobal">
+            <div class="about-global-row" data-idx="0" style="border:1px solid var(--border-color);border-radius:var(--radius-md);padding:12px;margin-bottom:12px;">
+                <div style="display:flex;gap:8px;margin-bottom:8px;">
+                    <div class="form-group" style="flex:0 0 100px;">
+                        <label>数字</label>
+                        <input type="text" class="form-input about-glb-figure" placeholder="13,500">
+                    </div>
+                    <div class="form-group" style="flex:0 0 80px;">
+                        <label>单位</label>
+                        <input type="text" class="form-input about-glb-unit" placeholder="M²">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>标题</label>
+                        <input type="text" class="form-input about-glb-title" placeholder="Facility">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <textarea class="form-input about-glb-text" rows="3" placeholder="描述文字"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>📢 CTA 区域</h3>
+        </div>
+        <div class="form-group">
+            <label>标题（支持 HTML 如 &lt;span&gt;标签&lt;/span&gt;）</label>
+            <input type="text" id="aboutCtaTitle" class="form-input" value='READY TO <span>PARTNER</span> WITH US?'>
+        </div>
+        <div class="form-group">
+            <label>描述</label>
+            <textarea id="aboutCtaDesc" class="form-input" rows="2" placeholder="Contact our sales team to learn more..."></textarea>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div style="display:flex;gap:12px;margin-top:24px;">
+        <button class="btn btn-primary" id="btnAboutSave">💾 保存修改</button>
+        <button class="btn btn-secondary" id="btnAboutReload">🔄 重新加载</button>
+    </div>
+</div>
