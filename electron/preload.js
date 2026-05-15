@@ -90,6 +90,7 @@ contextBridge.exposeInMainWorld('yolongcms', {
         upload: (siteId, subDir) => ipcRenderer.invoke('images:upload', siteId, subDir),
         mkdir: (siteId, subDir) => ipcRenderer.invoke('images:mkdir', siteId, subDir),
         remove: (siteId, relPath) => ipcRenderer.invoke('images:remove', siteId, relPath),
+        checkRefs: (siteId, relPath, isDir) => ipcRenderer.invoke('images:check-refs', siteId, relPath, isDir),
     },
 
     // ===== 分类管理 =====

@@ -574,6 +574,117 @@ function registerIpcHandlers() {
         logService.append('info', 'sites', '已删除图片资源', { siteId, path: relPath });
         return { success: true };
     });
+
+    // ===== 删除前检查引用 =====
+    ipcMain.handle('images:check-refs', (_event, siteId, relPath, isDir) => {
+        const repoDir = path.join(REPOS_DIR, siteId);
+        const fullPath = path.join(REPOS_DIR, siteId, relPath);
+
+        if (!fs.existsSync(fullPath)) {
+            return { success: true, blocked: false };
+        }
+
+        if (isDir) {
+            // 检查文件夹是否为空
+            const items = fs.readdirSync(fullPath);
+            const blocked = items.length > 0;
+            return {
+                success: true,
+                blocked,
+                reason: blocked ? '文件夹不为空' : '',
+                details: blocked ? items.slice(0, 50) : [],
+                total: items.length,
+            };
+        }
+
+        // 检查图片被引用的位置
+        const imageFilename = path.basename(relPath);
+        const references = [];
+
+        // 搜索辅助函数：在文本中搜索图片路径的各种写法
+        function searchInText(text, sourceName, sourceType) {
+            const found = [];
+            const patterns = [
+                imageFilename,
+                // 也检查没有路径前缀的纯文件名
+            ];
+            const lines = text.split('\n');
+            lines.forEach((line, idx) => {
+                const trimmed = line.trim();
+                // 跳过注释行
+                if (trimmed.startsWith('#') || trimmed.startsWith('//')) return;
+                if (trimmed.includes(imageFilename)) {
+                    found.push({
+                        file: sourceName,
+                        type: sourceType,
+                        line: idx + 1,
+                        content: trimmed.substring(0, 100),
+                    });
+                }
+            });
+            return found;
+        }
+
+        // 1. 扫描 _data/*.yml
+        const dataDir = path.join(repoDir, '_data');
+        if (fs.existsSync(dataDir)) {
+            fs.readdirSync(dataDir).forEach(file => {
+                if (file.endsWith('.yml') || file.endsWith('.yaml')) {
+                    const filePath = path.join(dataDir, file);
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const found = searchInText(content, '_data/' + file, '数据文件(YAML)');
+                    references.push(...found);
+                }
+            });
+        }
+
+        // 2. 扫描 _products/*.md
+        const productsDir = path.join(repoDir, '_products');
+        if (fs.existsSync(productsDir)) {
+            fs.readdirSync(productsDir).forEach(file => {
+                if (file.endsWith('.md')) {
+                    const filePath = path.join(productsDir, file);
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const found = searchInText(content, '_products/' + file, '产品');
+                    references.push(...found);
+                }
+            });
+        }
+
+        // 3. 扫描 _articles/*.md
+        const articlesDir = path.join(repoDir, '_articles');
+        if (fs.existsSync(articlesDir)) {
+            fs.readdirSync(articlesDir).forEach(file => {
+                if (file.endsWith('.md')) {
+                    const filePath = path.join(articlesDir, file);
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const found = searchInText(content, '_articles/' + file, '文章');
+                    references.push(...found);
+                }
+            });
+        }
+
+        // 4. 扫描根目录的 .md 和 .html 文件
+        fs.readdirSync(repoDir).forEach(file => {
+            if (file.endsWith('.md') || file.endsWith('.html')) {
+                const filePath = path.join(repoDir, file);
+                if (fs.statSync(filePath).isFile()) {
+                    const content = fs.readFileSync(filePath, 'utf-8');
+                    const found = searchInText(content, file, '页面');
+                    references.push(...found);
+                }
+            }
+        });
+
+        const blocked = references.length > 0;
+        return {
+            success: true,
+            blocked,
+            reason: blocked ? `该图片被 ${references.length} 处引用` : '',
+            details: references,
+            total: references.length,
+        };
+    });
 }
 
 const https = require('https');

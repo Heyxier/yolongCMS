@@ -168,15 +168,36 @@
             });
         });
 
-        // 右键菜单：删除
+        // 右键菜单：删除（先检查引用/是否为空）
         $grid.querySelectorAll('.img-item').forEach(el => {
-            el.addEventListener('contextmenu', (e) => {
+            el.addEventListener('contextmenu', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 const isDir = el.classList.contains('img-folder');
                 const name = el.querySelector('.img-name')?.textContent || '';
+                const relPath = el.dataset.path;
+
+                // 先检查引用
+                currentSite = getActiveSite();
+                if (!currentSite) return;
+
+                try {
+                    const check = await window.yolongcms.images.checkRefs(
+                        currentSite.id, 'images/' + relPath, isDir
+                    );
+                    if (check.blocked) {
+                        showDeleteBlock(isDir, name, check);
+                        return;
+                    }
+                } catch (err) {
+                    // 检查失败时允许用户自行决定
+                    showToast('⚠️ 引用检查失败，检查后重试');
+                    return;
+                }
+
+                // 无引用 / 空文件夹 → 确认后删除
                 if (confirm('确认删除 ' + (isDir ? '文件夹' : '图片') + ' "' + name + '"？')) {
-                    deleteItem(el.dataset.path, isDir);
+                    deleteItem(relPath, isDir);
                 }
             });
         });
@@ -257,6 +278,33 @@
         }
     }
 
+    // ===== 显示删除阻止弹窗 =====
+    function showDeleteBlock(isDir, name, check) {
+        const $modal = document.getElementById('deleteBlockModal');
+        const $title = document.getElementById('deleteBlockTitle');
+        const $reason = document.getElementById('deleteBlockReason');
+        const $list = document.getElementById('deleteBlockList');
+
+        if (isDir) {
+            $title.textContent = '⚠️ 文件夹不为空，无法删除';
+            $reason.textContent = '文件夹 "' + name + '" 包含 ' + check.total + ' 个项目：';
+            $list.innerHTML = check.details.map(item =>
+                '<div style="padding:6px 10px;border-bottom:1px solid var(--border-color);font-size:13px;color:var(--text-secondary);">📄 ' + escapeHtml(item.name || item) + '</div>'
+            ).join('');
+        } else {
+            $title.textContent = '⚠️ 图片正在使用中，无法删除';
+            $reason.textContent = '图片 "' + name + '" 被 ' + check.total + ' 处引用：';
+            $list.innerHTML = check.details.map(ref =>
+                '<div style="padding:6px 10px;border-bottom:1px solid var(--border-color);font-size:13px;">' +
+                '  <div style="color:var(--accent);font-weight:500;margin-bottom:2px;">' + escapeHtml(ref.type) + ': ' + escapeHtml(ref.file) + '</div>' +
+                '  <div style="color:var(--text-secondary);font-size:12px;">第' + ref.line + '行: ' + escapeHtml(ref.content) + '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        $modal.style.display = 'flex';
+    }
+
     // ===== 绑定事件 =====
     function bindEvents() {
         document.getElementById('btnUploadImages').addEventListener('click', uploadImages);
@@ -269,6 +317,19 @@
         document.getElementById('folderModal').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') confirmNewFolder();
             if (e.key === 'Escape') closeFolderModal();
+        });
+
+        // 删除阻止弹窗
+        function closeDeleteBlock() {
+            document.getElementById('deleteBlockModal').style.display = 'none';
+        }
+        document.getElementById('deleteBlockClose').addEventListener('click', closeDeleteBlock);
+        document.getElementById('deleteBlockOk').addEventListener('click', closeDeleteBlock);
+        document.getElementById('deleteBlockModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeDeleteBlock();
+        });
+        document.getElementById('deleteBlockModal').addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDeleteBlock();
         });
     }
 

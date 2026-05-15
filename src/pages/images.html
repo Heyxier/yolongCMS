@@ -40,9 +40,28 @@
             </div>
         </div>
         <div class="modal-footer">
-            <span class="form-error" id="folderError"></span>
-            <button class="btn btn-secondary" id="folderModalCancel">取消</button>
-            <button class="btn btn-primary" id="folderModalConfirm">创建</button>
+                <span class="form-error" id="folderError"></span>
+                <button class="btn btn-secondary" id="folderModalCancel">取消</button>
+                <button class="btn btn-primary" id="folderModalConfirm">创建</button>
+            </div>
         </div>
     </div>
+
+<!-- ===== 删除阻止弹窗 ===== -->
+<div class="modal-overlay" id="deleteBlockModal" style="display:none;">
+    <div class="modal" style="width:560px;">
+        <div class="modal-header">
+            <h3 id="deleteBlockTitle">⚠️ 无法删除</h3>
+            <button class="btn-icon modal-close" id="deleteBlockClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <p id="deleteBlockReason" style="margin-bottom:12px;color:var(--text-secondary);"></p>
+            <div id="deleteBlockList" style="max-height:300px;overflow-y:auto;background:var(--bg-tertiary);border-radius:var(--radius-md);padding:8px;">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="deleteBlockOk">知道了</button>
+        </div>
+    </div>
+</div>
 </div>
