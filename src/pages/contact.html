@@ -41,6 +41,24 @@
         <div id="contactInfoList"></div>
     </div>
 
+    <!-- 地图坐标 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>🗺️ 地图坐标</h3>
+        </div>
+        <div class="form-group" style="display:flex;gap:12px;">
+            <div style="flex:1;">
+                <label>纬度 (Latitude)</label>
+                <input type="text" id="contactLat" class="form-input" placeholder="31.433121">
+            </div>
+            <div style="flex:1;">
+                <label>经度 (Longitude)</label>
+                <input type="text" id="contactLon" class="form-input" placeholder="120.696391">
+            </div>
+        </div>
+        <span class="form-hint">可通过 maps.google.com 或 openstreetmap.org 搜公司地址获取坐标。留空则不显示地图</span>
+    </div>
+
     <!-- 操作按钮 -->
     <div style="display:flex;gap:12px;margin-top:24px;">
         <button class="btn btn-primary" id="btnContactSave">💾 保存修改</button>

@@ -25,6 +25,8 @@
         document.getElementById('contactTitle').value = data.title || '';
         document.getElementById('contactDescription').value = data.description || '';
         document.getElementById('contactBgImage').value = data.bgImage || '';
+        document.getElementById('contactLat').value = data.lat || '';
+        document.getElementById('contactLon').value = data.lon || '';
 
         const $list = document.getElementById('contactInfoList');
         $list.innerHTML = '';
@@ -63,6 +65,13 @@
             bgImage: document.getElementById('contactBgImage').value.trim(),
             info: [],
         };
+
+        const lat = parseFloat(document.getElementById('contactLat').value.trim());
+        const lon = parseFloat(document.getElementById('contactLon').value.trim());
+        if (!isNaN(lat) && !isNaN(lon)) {
+            data.lat = lat;
+            data.lon = lon;
+        }
 
         const rows = document.querySelectorAll('#contactInfoList .contact-info-row');
         rows.forEach(row => {
