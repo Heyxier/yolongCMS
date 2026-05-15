@@ -14,6 +14,7 @@ import os
 import time
 import hmac
 import hashlib
+import subprocess
 import httpx
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
@@ -43,6 +44,8 @@ CORS_ORIGINS = [
 ]
 
 # ─── 初始化数据库 ───────────────────────────────
+WEBSITE_REPO = "/home/admin/yolongtec-v7.2"
+
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -230,6 +233,11 @@ class ContactHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/")
         
+        # POST /api/publish — 接收CMS客户端推送的文件
+        if path == "/api/publish":
+            self._handle_publish()
+            return
+        
         # POST /api/contact/{site_id}
         if path.startswith("/api/contact/"):
             site_id = path.split("/api/contact/")[-1]
@@ -293,6 +301,75 @@ class ContactHandler(BaseHTTPRequestHandler):
         
         else:
             self._send_json(404, {"error": "not found"})
+    
+    def _handle_publish(self):
+        """处理 CMS 客户端发布请求"""
+        if not self._check_token():
+            self._send_json(401, {"error": "unauthorized"})
+            return
+        
+        content_len = int(self.headers.get("Content-Length", 0))
+        if content_len == 0:
+            self._send_json(400, {"error": "empty body"})
+            return
+        
+        body = self.rfile.read(content_len)
+        try:
+            payload = json.loads(body)
+        except json.JSONDecodeError:
+            self._send_json(400, {"error": "invalid JSON"})
+            return
+        
+        files = payload.get("files", [])
+        if not files:
+            self._send_json(400, {"error": "no files to publish"})
+            return
+        
+        written = []
+        errors = []
+        for f in files:
+            file_path = f.get("path", "")
+            content = f.get("content", "")
+            if not file_path:
+                errors.append("missing path")
+                continue
+            # 安全检查：禁止路径穿越
+            abs_path = os.path.normpath(os.path.join(WEBSITE_REPO, file_path))
+            if not abs_path.startswith(WEBSITE_REPO):
+                errors.append(f"invalid path: {file_path}")
+                continue
+            try:
+                os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+                with open(abs_path, "w", encoding="utf-8") as fh:
+                    fh.write(content)
+                written.append(file_path)
+            except Exception as e:
+                errors.append(f"{file_path}: {str(e)}")
+        
+        # 如果有写入的文件，自动 git commit
+        commit_hash = ""
+        if written:
+            try:
+                subprocess.run(
+                    ["git", "add", "-A"],
+                    cwd=WEBSITE_REPO, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30
+                )
+                result = subprocess.run(
+                    ["git", "commit", "-m", payload.get("message", "CMS 同步更新")],
+                    cwd=WEBSITE_REPO, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30
+                )
+                if result.returncode == 0:
+                    commit_hash = result.stdout.decode().strip()
+            except Exception as e:
+                errors.append(f"git commit: {str(e)}")
+        
+        print(f"\n📦 [CMS发布] {len(written)} files written, commit: {commit_hash[:12] if commit_hash else 'none'}")
+        self._send_json(200, {
+            "status": "ok",
+            "written": written,
+            "errors": errors,
+            "commit": commit_hash[:12] if commit_hash else None,
+        })
     
     def do_GET(self):
         parsed = urlparse(self.path)
