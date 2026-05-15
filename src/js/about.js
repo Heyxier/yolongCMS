@@ -136,6 +136,36 @@
         return data;
     }
 
+    // ===== 默认内容 =====
+    function getDefaultData() {
+        return {
+            hero: { subtitle: 'Garden Power Tools &amp; OEM/ODM Solutions Since 2008' },
+            profile: {
+                image: '../images/cordless-drill-hero.jpg',
+                paragraphs: [
+                    'Founded in 2008 in Suzhou, Yuanlong Technology specializes in garden power tools (cordless, electric, and gasoline powered) as well as electric power tools including sanding machinery. Our product lines cover lawn mowers, grass trimmers, brush cutters, blower vacs, chain saws, rotary sanders, and finishing sanders.',
+                    'With a 13,500 m&sup2; manufacturing facility and over 250 skilled employees, we have an annual production capacity of 1,000,000 pieces. We primarily serve the OEM and ODM markets, exporting to North America, Europe, Australia, and South America &mdash; committed to the principle of <em>&ldquo;great quality, affordable price, win-win cooperation&rdquo;</em>.',
+                ],
+            },
+            values: [
+                { number: '01', title: 'GREAT QUALITY', text: 'We uphold rigorous quality standards across all our products. From raw material selection to final assembly, every step is controlled to ensure reliable performance that our global partners can trust.' },
+                { number: '02', title: 'AFFORDABLE PRICE', text: 'Through efficient manufacturing and supply chain management, we deliver cost-effective solutions without compromising on quality &mdash; making professional-grade garden tools accessible to markets worldwide.' },
+                { number: '03', title: 'WIN-WIN COOPERATION', text: 'We believe in building long-term partnerships based on mutual benefit. Our OEM/ODM services are designed to help our clients grow their business with flexible customization and reliable support.' },
+                { number: '04', title: 'CONTINUOUS INNOVATION', text: 'With over 14 years of experience in garden and power tools, our team continuously improves product design, adopts new technologies, and optimizes production processes to stay ahead of market demands.' },
+            ],
+            global: [
+                { figure: '13,500', unit: 'M&sup2;', title: 'Facility', text: 'Modern manufacturing plant located at No.17 Chengtai Road, Taiping Street, Xiangcheng District, Suzhou &mdash; equipped for efficient production of garden and power tools.' },
+                { figure: '1M', unit: '', title: 'Annual Capacity', text: 'With an annual production capacity of 1,000,000 pieces, we reliably serve OEM and ODM clients across four continents with consistent quality and timely delivery.' },
+                { figure: '250+', unit: '', title: 'Skilled Employees', text: 'A dedicated team of over 250 professionals working together to engineer, manufacture, and deliver high-quality garden power tools to global markets.' },
+                { figure: '4', unit: '', title: 'Continents Served', text: 'Our products reach customers in North America, Europe, Australia, and South America, building lasting partnerships through great quality and win-win cooperation.' },
+            ],
+            cta: {
+                title: 'READY TO <span>PARTNER</span> WITH US?',
+                description: 'Contact our sales team to learn more about our products, distribution opportunities, and how Yolong can support your business.',
+            },
+        };
+    }
+
     // ===== 加载数据 =====
     async function load() {
         const site = getSite();
@@ -158,10 +188,13 @@
                 populateForm(result.data);
                 showToast('✅ 已加载 About 页面内容');
             } else {
-                showToast('⚠️ 未找到 _data/about.yml，将在保存时创建');
+                // 文件不存在，使用默认内容
+                populateForm(getDefaultData());
+                showToast('ℹ️ 未找到 _data/about.yml，已使用默认内容，保存后自动创建');
             }
         } catch (err) {
-            showToast('加载失败: ' + err.message);
+            showToast('加载失败，使用默认内容: ' + err.message);
+            populateForm(getDefaultData());
         }
     }
 
