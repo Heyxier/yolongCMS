@@ -1,0 +1,49 @@
+<!-- 联系方式管理 -->
+<div class="page-header">
+    <div class="page-title">
+        <h2>📞 联系方式</h2>
+        <p class="page-subtitle">编辑 Contact Us 页面的联系信息，修改后需通过「发布」页面提交推送</p>
+    </div>
+</div>
+
+<!-- 空状态 -->
+<div class="empty-state" id="contactEmpty" style="display:none;">
+    <div class="placeholder-icon">📞</div>
+    <h3>请先选择一个站点</h3>
+    <p>选择站点后可编辑联系方式</p>
+</div>
+
+<div id="contactContent" style="display:none;">
+    <!-- 页面头部 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>🔝 页面头部</h3>
+        </div>
+        <div class="form-group">
+            <label>标题</label>
+            <input type="text" id="contactTitle" class="form-input" placeholder="CONTACT US">
+        </div>
+        <div class="form-group">
+            <label>描述</label>
+            <textarea id="contactDescription" class="form-input" rows="2" placeholder="Get in touch with our sales team or find a dealer near you"></textarea>
+        </div>
+        <div class="form-group">
+            <label>背景图片路径</label>
+            <input type="text" id="contactBgImage" class="form-input" placeholder="../images/dealer-network.jpg">
+        </div>
+    </div>
+
+    <!-- 联系信息 -->
+    <div class="pub-section">
+        <div class="section-header">
+            <h3>📍 联系信息</h3>
+        </div>
+        <div id="contactInfoList"></div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div style="display:flex;gap:12px;margin-top:24px;">
+        <button class="btn btn-primary" id="btnContactSave">💾 保存修改</button>
+        <button class="btn btn-secondary" id="btnContactReload">🔄 重新加载</button>
+    </div>
+</div>
