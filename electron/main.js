@@ -258,14 +258,18 @@ function registerIpcHandlers() {
     const TEMPLATE_COLS = [
         { key: 'model',      title: '型号*',       width: 18 },
         { key: 'name',       title: '名称*',       width: 30 },
+        { key: 'name_zh',    title: '中文名称',    width: 25 },
         { key: 'category',   title: '分类*',       width: 14 },
         { key: 'voltage',    title: '电压',        width: 10 },
         { key: 'torque',     title: '扭矩',        width: 12 },
         { key: 'motorType',  title: '电机类型',    width: 12 },
         { key: 'image',      title: '图片路径',    width: 30 },
         { key: 'description',title: '简介描述',    width: 25 },
+        { key: 'desc_zh',    title: '中文描述',    width: 25 },
         { key: 'features',   title: '特性(|分隔)', width: 30 },
+        { key: 'features_zh',title: '中文特性(|)', width: 30 },
         { key: 'accessories',title: '配件(|分隔)', width: 30 },
+        { key: 'accessories_zh',title: '中文配件(|)', width: 30 },
         { key: 'status',     title: '上架',         width: 8 },
     ];
 
@@ -273,14 +277,18 @@ function registerIpcHandlers() {
     const TEMPLATE_EXAMPLE = {
         model: 'ZPT-CD-12252',
         name: '12V 25Nm Drill Driver',
+        name_zh: '12V 25Nm 电钻',
         category: 'drill',
         voltage: '12V',
         torque: '25 N·m',
         motorType: 'brushed',
         image: '/images/products/drill/ZPT-CD-12252.jpg',
         description: 'Compact design, ideal for home and professional use',
+        desc_zh: '紧凑设计，适合家用和专业使用',
         features: 'Two-speed gearbox|Auto spindle lock|LED work light',
+        features_zh: '双速变速箱|自动主轴锁|LED工作灯',
         accessories: '2pc 2.0Ah Battery|1pc Quick Charger',
+        accessories_zh: '2块2.0Ah电池|1个快充充电器',
         status: 'TRUE',
     };
 
@@ -379,14 +387,18 @@ function registerIpcHandlers() {
                 const data = {
                     model,
                     name,
+                    name_zh: String(row['中文名称'] || '').trim(),
                     category,
                     voltage: String(row['电压'] || '').trim(),
                     torque: String(row['扭矩'] || '').trim(),
                     motorType: row['电机类型'] ? String(row['电机类型']).trim().toLowerCase() : '',
                     image: String(row['图片路径'] || row['image'] || '').trim(),
                     description: String(row['简介描述'] || row['description'] || '').trim(),
+                    desc_zh: String(row['中文描述'] || '').trim(),
                     features: [],
+                    features_zh: [],
                     accessories: [],
+                    accessories_zh: [],
                     status: true,
                 };
 
@@ -394,8 +406,14 @@ function registerIpcHandlers() {
                 const feats = String(row['特性(|分隔)'] || row['特性'] || row['features'] || '').trim();
                 if (feats) data.features = feats.split('|').map(s => s.trim()).filter(Boolean);
 
+                const featsZh = String(row['中文特性(|)'] || row['中文特性'] || '').trim();
+                if (featsZh) data.features_zh = featsZh.split('|').map(s => s.trim()).filter(Boolean);
+
                 const accs = String(row['配件(|分隔)'] || row['配件'] || row['accessories'] || '').trim();
                 if (accs) data.accessories = accs.split('|').map(s => s.trim()).filter(Boolean);
+
+                const accsZh = String(row['中文配件(|)'] || row['中文配件'] || '').trim();
+                if (accsZh) data.accessories_zh = accsZh.split('|').map(s => s.trim()).filter(Boolean);
 
                 // 状态
                 const statusVal = String(row['上架'] || 'TRUE').trim().toUpperCase();

@@ -213,6 +213,7 @@
     function fillForm(data, body) {
         document.getElementById('pfModel').value = data.model || '';
         document.getElementById('pfName').value = data.name || data.title || '';
+        document.getElementById('pfNameZh').value = data.name_zh || '';
         document.getElementById('pfCategory').value = data.category || '';
         document.getElementById('pfStatus').checked = data.status !== false;
         updateStatusText();
@@ -221,8 +222,11 @@
         document.getElementById('pfMotorType').value = data.motorType || '';
         document.getElementById('pfImage').value = data.image || '';
         document.getElementById('pfDescription').value = data.description || '';
+        document.getElementById('pfDescZh').value = data.desc_zh || '';
         document.getElementById('pfFeatures').value = formatLines(data.features);
+        document.getElementById('pfFeaturesZh').value = formatLines(data.features_zh);
         document.getElementById('pfAccessories').value = formatLines(data.accessories);
+        document.getElementById('pfAccessoriesZh').value = formatLines(data.accessories_zh);
         document.getElementById('pfBody').value = body || '';
         document.getElementById('pfError').textContent = '';
     }
@@ -232,6 +236,7 @@
         const data = {
             model: document.getElementById('pfModel').value.trim(),
             name: document.getElementById('pfName').value.trim(),
+            name_zh: document.getElementById('pfNameZh').value.trim(),
             category: document.getElementById('pfCategory').value.trim(),
             status: document.getElementById('pfStatus').checked,
             voltage: document.getElementById('pfVoltage').value.trim(),
@@ -239,8 +244,11 @@
             motorType: document.getElementById('pfMotorType').value,
             image: document.getElementById('pfImage').value.trim(),
             description: document.getElementById('pfDescription').value.trim(),
+            desc_zh: document.getElementById('pfDescZh').value.trim(),
             features: parseLines(document.getElementById('pfFeatures').value),
+            features_zh: parseLines(document.getElementById('pfFeaturesZh').value),
             accessories: parseLines(document.getElementById('pfAccessories').value),
+            accessories_zh: parseLines(document.getElementById('pfAccessoriesZh').value),
         };
         const body = document.getElementById('pfBody').value;
         return { data, body };
