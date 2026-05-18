@@ -1,6 +1,6 @@
 {
   "name": "yolongcms-desktop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "YolongCMS - 多网站统一内容管理桌面应用",
   "main": "electron/main.js",
   "scripts": {
