@@ -122,7 +122,8 @@ async function pushWithToken(repoDir, token) {
         const authUrl = `https://oauth2:${token}@github.com/${repoPath}.git`;
         await git.remote(['set-url', 'origin', authUrl]);
 
-        await git.push();
+        // 禁用 Windows Git Credential Manager 防止它覆盖 URL 中的 token
+        await git.env('GIT_ASKPASS', 'echo').push();
         return { success: true, message: '推送成功' };
     } catch (err) {
         return { success: false, error: err.message || '推送失败' };
