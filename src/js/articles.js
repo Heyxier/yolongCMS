@@ -438,17 +438,27 @@
         currentSite = getActiveSite();
         if (!currentSite) { showEmpty('请先选择一个站点'); return; }
         try {
-            const r = await window.yolongcms.articles.list(currentSite.id);
-            if (r.success) {
-                articles = r.files.sort((a, b) => b.mtime - a.mtime);
-                const cats = new Set();
-                articles.forEach(a => { if (a.category) cats.add(a.category); });
-                categories = Array.from(cats).sort();
-                renderCategoryFilter();
-                renderArticles();
-            } else {
-                showEmpty('加载失败: ' + r.error);
+            const [enR, zhR] = await Promise.all([
+                window.yolongcms.articles.list(currentSite.id),
+                window.yolongcms.zh_articles ? window.yolongcms.zh_articles.list(currentSite.id) : Promise.resolve({ success: true, files: [] })
+            ]);
+
+            let allArticles = [];
+            if (enR.success) {
+                (enR.files || []).forEach(f => { f._collection = 'en'; });
+                allArticles = allArticles.concat(enR.files || []);
             }
+            if (zhR.success) {
+                (zhR.files || []).forEach(f => { f._collection = 'zh'; });
+                allArticles = allArticles.concat(zhR.files || []);
+            }
+
+            articles = allArticles.sort((a, b) => b.mtime - a.mtime);
+            const cats = new Set();
+            articles.forEach(a => { if (a.category) cats.add(a.category); });
+            categories = Array.from(cats).sort();
+            renderCategoryFilter();
+            renderArticles();
         } catch (err) {
             showEmpty('加载失败: ' + err.message);
         }
@@ -519,7 +529,7 @@
                 html += '    </div>';
                 html += '  </div>';
                 html += '  <div class="product-actions">';
-                html += '    <button class="btn btn-primary-outline btn-sm" data-file="' + escapeHtml(a.name) + '" data-action="edit">编辑</button>';
+                html += '    <button class="btn btn-primary-outline btn-sm" data-file="' + escapeHtml(a.name) + '" data-collection="' + (a._collection || 'en') + '" data-action="edit">编辑</button>';
                 html += '    <button class="btn btn-danger-outline btn-sm" data-file="' + escapeHtml(a.name) + '" data-action="delete">删除</button>';
                 html += '  </div>';
                 html += '</div>';
@@ -527,7 +537,7 @@
             $list.innerHTML = html;
 
             $list.querySelectorAll('[data-action="edit"]').forEach(btn => {
-                btn.addEventListener('click', () => openEdit(btn.dataset.file));
+                btn.addEventListener('click', () => openEdit(btn.dataset.file, btn.dataset.collection || 'en'));
             });
             $list.querySelectorAll('[data-action="delete"]').forEach(btn => {
                 btn.addEventListener('click', () => deleteArticle(btn.dataset.file));
@@ -540,12 +550,13 @@
     }
 
     // ===== 编辑弹窗 =====
-    async function openEdit(filename) {
-        editingFile = filename;
+    async function openEdit(filename, collection) {
+        editingFile = { name: filename, collection: collection || 'en' };
         document.getElementById('modalArticleTitle').textContent = '编辑文章';
         document.getElementById('modalArticleSave').textContent = '保存';
         try {
-            const r = await window.yolongcms.articles.read(currentSite.id, filename);
+            const api = collection === 'zh' ? window.yolongcms.zh_articles : window.yolongcms.articles;
+            const r = await api.read(currentSite.id, filename);
             if (!r.success) { showToast('读取失败: ' + r.error); return; }
             const d = r.data || {};
             document.getElementById('afTitle').value = d.title || '';
@@ -601,8 +612,16 @@
         const slug = slugify(title);
         const filename = slug + '.md';
 
+        const lang = document.getElementById('afLang').value;
+        const targetCollection = editingFile ? editingFile.collection : (lang === 'zh' ? 'zh' : 'en');
+
         if (!editingFile) {
-            if (articles.some(a => a.name === filename)) {
+            // 检查同语言集合内是否有重名
+            const sameLangArticles = articles.filter(a => {
+                const aLang = a._collection === 'zh' ? 'zh' : 'en';
+                return aLang === lang;
+            });
+            if (sameLangArticles.some(a => a.name === filename)) {
                 document.getElementById('afError').textContent = '已有同标题文章，请修改标题';
                 return;
             }
@@ -612,7 +631,7 @@
             title,
             category,
             placement: document.getElementById('afPlacement').value,
-            lang: document.getElementById('afLang').value,
+            lang: lang,
             publishedAt: document.getElementById('afPublishedAt').value || new Date().toISOString().split('T')[0],
             excerpt: document.getElementById('afExcerpt').value.trim(),
             coverImage: document.getElementById('afCoverImage').value.trim(),
@@ -622,7 +641,16 @@
         const body = getRichContent();
 
         try {
-            const r = await window.yolongcms.articles.write(currentSite.id, editingFile || filename, data, body);
+            const writeApi = targetCollection === 'zh' ? window.yolongcms.zh_articles : window.yolongcms.articles;
+
+            // 如果编辑时语言变了，从旧集合删除
+            if (editingFile && editingFile.collection !== targetCollection) {
+                const oldApi = editingFile.collection === 'zh' ? window.yolongcms.zh_articles : window.yolongcms.articles;
+                await oldApi.remove(currentSite.id, editingFile.name);
+            }
+
+            const writeFilename = editingFile ? editingFile.name : filename;
+            const r = await writeApi.write(currentSite.id, writeFilename, data, body);
             if (r.success) {
                 showToast(editingFile ? '✅ 文章已更新' : '✅ 文章已添加');
                 closeModal();

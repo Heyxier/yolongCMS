@@ -474,6 +474,26 @@ function registerIpcHandlers() {
         return { success: true };
     });
 
+    // ===== 中文文章管理 =====
+    ipcMain.handle('zh_articles:list', (_event, siteId) => {
+        const dir = path.join(REPOS_DIR, siteId, '_zh_articles');
+        return mdService.list(dir);
+    });
+    ipcMain.handle('zh_articles:read', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_zh_articles', filename);
+        return mdService.read(filePath);
+    });
+    ipcMain.handle('zh_articles:write', (_event, siteId, filename, data, content) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_zh_articles', filename);
+        return mdService.write(filePath, data, content);
+    });
+    ipcMain.handle('zh_articles:remove', (_event, siteId, filename) => {
+        const filePath = path.join(REPOS_DIR, siteId, '_zh_articles', filename);
+        mdService.remove(filePath);
+        logService.append('info', 'sites', '中文文章已删除', { siteId, filename });
+        return { success: true };
+    });
+
     // ===== 分类管理 =====
     ipcMain.handle('categories:rename', async (_event, siteId, oldName, newName) => {
         if (!oldName || !newName) return { success: false, error: '分类名不能为空' };
