@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('yolongcms', {
         push: (repoDir) => ipcRenderer.invoke('git:push', repoDir),
         pushAuth: (repoDir) => ipcRenderer.invoke('git:push-auth', repoDir),
         log: (repoDir, maxCount) => ipcRenderer.invoke('git:log', repoDir, maxCount),
+        setRemote: (repoDir, newUrl) => ipcRenderer.invoke('git:set-remote', repoDir, newUrl),
     },
 
     // ===== Markdown 服务 =====

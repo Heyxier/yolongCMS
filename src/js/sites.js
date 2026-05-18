@@ -180,13 +180,25 @@
 
             if (editSiteIndex >= 0) {
                 // ===== 编辑模式 =====
+                const oldSite = sites[editSiteIndex];
+                const oldRepo = oldSite.repo;
                 sites[editSiteIndex] = { id, name, repo, branch, server };
                 await saveSites();
                 formCache = { name: '', id: '', repo: '', branch: 'main', server: '' };
                 if (window.__app) window.__app.refreshSites();
                 render();
                 closeModal();
-                showToast('✅ 站点 "' + name + '" 已更新');
+                // 如果仓库地址变了，同步更新本地 git remote
+                if (oldRepo !== repo && window.yolongcms && window.yolongcms.git && window.yolongcms.git.setRemote) {
+                    try {
+                        await window.yolongcms.git.setRemote(id, repo);
+                        showToast('✅ 站点 "' + name + '" 已更新，git remote 已同步');
+                    } catch (e) {
+                        showToast('⚠️ 站点已更新，但 git remote 更新失败: ' + (e.message || '未知错误'));
+                    }
+                } else {
+                    showToast('✅ 站点 "' + name + '" 已更新');
+                }
                 return;
             }
 

@@ -161,4 +161,20 @@ async function log(repoDir, maxCount = 20) {
     }
 }
 
-module.exports = { pull, status, commit, push, pushWithToken, log };
+/**
+ * git remote set-url — 更新远程仓库地址
+ * @param {string} repoDir
+ * @param {string} newUrl
+ * @returns {{ success: boolean, message?: string, error?: string }}
+ */
+async function setRemote(repoDir, newUrl) {
+    try {
+        const git = simpleGit(repoDir);
+        await git.remote(['set-url', 'origin', newUrl]);
+        return { success: true, message: '远程仓库地址已更新' };
+    } catch (err) {
+        return { success: false, error: err.message || '更新失败' };
+    }
+}
+
+module.exports = { pull, status, commit, push, pushWithToken, log, setRemote };

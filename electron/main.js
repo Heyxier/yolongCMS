@@ -180,6 +180,13 @@ function registerIpcHandlers() {
         const fullPath = path.join(REPOS_DIR, repoDir);
         return await gitService.log(fullPath, maxCount);
     });
+    ipcMain.handle('git:set-remote', async (_event, repoDir, newUrl) => {
+        const fullPath = path.join(REPOS_DIR, repoDir);
+        const result = await gitService.setRemote(fullPath, newUrl);
+        if (result.success) logService.append('info', 'git', '远程仓库地址已更新', { repoDir, newUrl });
+        else logService.append('error', 'git', '更新远程地址失败: ' + result.error, { repoDir, newUrl, error: result.error });
+        return result;
+    });
 
     // ===== Markdown 服务 =====
     ipcMain.handle('md:read', (_event, filePath) => {
