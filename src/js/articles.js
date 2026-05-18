@@ -507,9 +507,10 @@
             filtered.forEach(a => {
                 const pub = a.tags && a.tags.length ? a.tags[0] : '';
                 const isPub = a.status !== false;
+                const langBadge = a.lang === 'zh' ? '<span class="lang-badge" style="font-size:11px;background:var(--accent-500);color:#fff;padding:2px 8px;border-radius:3px;margin-left:8px;">中文</span>' : '';
                 html += '<div class="article-card">';
                 html += '  <div class="article-info">';
-                html += '    <div class="article-title">' + escapeHtml(a.title || a.name) + '</div>';
+                html += '    <div class="article-title">' + escapeHtml(a.title || a.name) + langBadge + '</div>';
                 html += '    <div class="article-meta">';
                 if (a.category) html += '      <span class="product-tag">' + escapeHtml(a.category) + '</span>';
                 const date = a.mtime ? formatDate(a.mtime) : '';
@@ -550,6 +551,7 @@
             document.getElementById('afTitle').value = d.title || '';
             document.getElementById('afCategory').value = d.category || '';
             document.getElementById('afPlacement').value = d.placement || 'news';
+            document.getElementById('afLang').value = d.lang || 'en';
             document.getElementById('afPublishedAt').value = d.publishedAt || '';
             document.getElementById('afStatus').checked = d.status !== false;
             updateStatusText();
@@ -571,6 +573,7 @@
         document.getElementById('afTitle').value = '';
         document.getElementById('afCategory').value = '';
         document.getElementById('afPlacement').value = 'news';
+        document.getElementById('afLang').value = 'en';
         document.getElementById('afPublishedAt').value = new Date().toISOString().split('T')[0];
         document.getElementById('afStatus').checked = true;
         updateStatusText();
@@ -609,6 +612,7 @@
             title,
             category,
             placement: document.getElementById('afPlacement').value,
+            lang: document.getElementById('afLang').value,
             publishedAt: document.getElementById('afPublishedAt').value || new Date().toISOString().split('T')[0],
             excerpt: document.getElementById('afExcerpt').value.trim(),
             coverImage: document.getElementById('afCoverImage').value.trim(),

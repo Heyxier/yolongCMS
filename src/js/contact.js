@@ -119,6 +119,8 @@
                     { label: '电话', value: '+86 0512-69577857-808' },
                     { label: '邮箱', value: 'sale1@yolongtec.com' },
                 ],
+                lat: 31.42,
+                lon: 120.69,
             };
         }
         return {
