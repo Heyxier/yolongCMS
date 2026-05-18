@@ -613,7 +613,7 @@
         const filename = slug + '.md';
 
         const lang = document.getElementById('afLang').value;
-        const targetCollection = editingFile ? editingFile.collection : (lang === 'zh' ? 'zh' : 'en');
+        const targetCollection = lang === 'zh' ? 'zh' : 'en';
 
         if (!editingFile) {
             // 检查同语言集合内是否有重名
@@ -665,9 +665,13 @@
 
     // ===== 删除 =====
     async function deleteArticle(filename) {
-        if (!confirm('确认删除 "' + filename.replace(/\.md$/, '') + '"？不可撤销！')) return;
+        const article = articles.find(a => a.name === filename);
+        const collection = (article && article._collection) || 'en';
+        const nameDisplay = filename.replace(/\.md$/, '');
+        if (!confirm('确认删除 "' + nameDisplay + '"？不可撤销！')) return;
         try {
-            const r = await window.yolongcms.articles.remove(currentSite.id, filename);
+            const api = collection === 'zh' ? window.yolongcms.zh_articles : window.yolongcms.articles;
+            const r = await api.remove(currentSite.id, filename);
             if (r.success) { showToast('✅ 已删除'); await loadArticles(); }
             else { showToast('❌ 删除失败: ' + r.error); }
         } catch (err) { showToast('❌ 删除失败: ' + err.message); }
