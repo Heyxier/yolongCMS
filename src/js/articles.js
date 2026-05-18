@@ -672,7 +672,7 @@
         document.getElementById('artFilterSearch').addEventListener('input', renderArticles);
 
         document.getElementById('articleModal').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') saveArticle();
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.getAttribute('contenteditable') !== 'true') saveArticle();
             if (e.key === 'Escape') closeModal();
         });
     }
