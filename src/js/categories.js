@@ -1,4 +1,4 @@
-// YolongCMS Desktop — 分类管理
+// YolongCMS Desktop — 分类管理（自动同步中英文）
 (function () {
     'use strict';
 
@@ -17,24 +17,43 @@
 
     function getSite() { const a = window.__app; return a ? a.getCurrentSite() : null; }
 
+    // ===== 同步到 zh_categories.yml =====
+    async function syncZhCategories(siteId, data) {
+        try {
+            const repoPath = await window.yolongcms.sites.repoPath(siteId);
+            const zhPath = repoPath + '/_data/zh_categories.yml';
+            const zhData = {};
+            for (const [key, entry] of Object.entries(data)) {
+                zhData[key] = {
+                    name: entry.name || '',
+                    name_zh: entry.name_zh || entry.title || entry.name || '',
+                    slug: entry.slug || '',
+                    title: entry.title || '',
+                    desc: entry.desc || '',
+                    image: entry.image || '',
+                    order: entry.order || 99,
+                };
+            }
+            await window.yolongcms.yml.write(zhPath, zhData);
+        } catch (err) {
+            console.error('[YolongCMS] syncZhCategories error:', err);
+        }
+    }
+
     // ===== 加载分类 =====
     async function loadCategories() {
         const site = getSite();
         if (!site) { document.getElementById('catWrap').innerHTML = '<div class="empty-state" style="display:flex"><h3>请先选择一个站点</h3></div>'; return; }
 
         try {
-            // 并行加载：分类YAML + 产品列表 + 文章列表
             const [ymlR, pR, aR] = await Promise.all([
                 window.yolongcms.categories.read(site.id),
                 window.yolongcms.products.list(site.id),
                 window.yolongcms.articles.list(site.id),
             ]);
 
-            // 从 _data/categories.yml 读取的分类
             const ymlData = ymlR.success ? (ymlR.data || {}) : {};
-
-            // 从产品/文章文件扫描到的分类
-            const catFiles = {}; // { name: { products: Set<filename>, articles: Set<filename> } }
+            const catFiles = {};
             function addFileCat(name, type, filename) {
                 if (!name) return;
                 if (!catFiles[name]) catFiles[name] = { products: new Set(), articles: new Set() };
@@ -43,7 +62,6 @@
             (pR.files || []).forEach(f => addFileCat(f.category, 'products', f.name));
             (aR.files || []).forEach(f => addFileCat(f.category, 'articles', f.name));
 
-            // 合并：YAML 中的分类优先，并补充文件扫描到的额外分类
             const allNames = new Set([...Object.keys(ymlData), ...Object.keys(catFiles)]);
             const names = Array.from(allNames).sort((a, b) => {
                 const oa = ymlData[a]?.order || 99;
@@ -68,19 +86,16 @@
         }
         $empty.style.display = 'none';
 
-        let html = '<table class="cat-table"><thead><tr><th>分类名称</th><th>ID</th><th>中文标题</th><th>封面图</th><th>产品数</th><th>文章数</th><th>排序</th><th>操作</th></tr></thead><tbody>';
+        let html = '<table class="cat-table"><thead><tr><th>分类名称</th><th>ID</th><th>中文标题</th><th>中文简称</th><th>产品数</th><th>文章数</th><th>排序</th><th>操作</th></tr></thead><tbody>';
         names.forEach(name => {
             const ymlEntry = ymlData[name] || {};
             const files = catFiles[name] || { products: new Set(), articles: new Set() };
-            const pc = files.products.size;
-            const ac = files.articles.size;
-            const img = ymlEntry.image || '';
             html += '<tr>'
                 + '<td><strong>' + escapeHtml(ymlEntry.name || name) + '</strong></td>'
                 + '<td><code>' + escapeHtml(name) + '</code></td>'
                 + '<td>' + escapeHtml(ymlEntry.title || '-') + '</td>'
-                + '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (img ? '<code>' + escapeHtml(img) + '</code>' : '<span style="color:var(--text-secondary)">(无)</span>') + '</td>'
-                + '<td>' + pc + '</td><td>' + ac + '</td>'
+                + '<td>' + escapeHtml(ymlEntry.name_zh || ymlEntry.title || '-') + '</td>'
+                + '<td>' + files.products.size + '</td><td>' + files.articles.size + '</td>'
                 + '<td>' + (ymlEntry.order || 99) + '</td>'
                 + '<td class="cat-actions">'
                 + '<button class="btn btn-primary-outline btn-sm" data-cat="' + escapeHtml(name) + '" data-action="edit">编辑</button>'
@@ -102,7 +117,7 @@
         });
     }
 
-    // ===== 重命名（已有） =====
+    // ===== 重命名 =====
     function openRename(name) {
         document.getElementById('catOldName').value = name;
         document.getElementById('catNewName').value = '';
@@ -126,6 +141,10 @@
         try {
             const r = await window.yolongcms.categories.rename(site.id, oldName, newName);
             if (r.success) {
+                // 同步到 zh_categories.yml
+                const ymlR = await window.yolongcms.categories.read(site.id);
+                const data = ymlR.success ? (ymlR.data || {}) : {};
+                await syncZhCategories(site.id, data);
                 showToast('✅ 已重命名 "' + oldName + '" → "' + newName + '"（' + r.updated + ' 个文件）');
                 closeRename();
                 loadCategories();
@@ -143,7 +162,9 @@
         document.getElementById('catAddName').value = '';
         document.getElementById('catAddSlug').value = '';
         document.getElementById('catAddTitle').value = '';
+        document.getElementById('catAddNameZh').value = '';
         document.getElementById('catAddDesc').value = '';
+        document.getElementById('catAddImage').value = '';
         document.getElementById('catAddOrder').value = '99';
         document.getElementById('catAddError').textContent = '';
         document.getElementById('catAddModal').style.display = 'flex';
@@ -157,6 +178,7 @@
         const name = document.getElementById('catAddName').value.trim();
         const slug = document.getElementById('catAddSlug').value.trim() || key;
         const title = document.getElementById('catAddTitle').value.trim();
+        const nameZh = document.getElementById('catAddNameZh').value.trim() || title;
         const desc = document.getElementById('catAddDesc').value.trim();
         const image = document.getElementById('catAddImage').value.trim();
         const order = parseInt(document.getElementById('catAddOrder').value) || 99;
@@ -170,7 +192,6 @@
         if (!site) { showToast('请先选择一个站点'); return; }
 
         try {
-            // 读取现有数据
             const ymlR = await window.yolongcms.categories.read(site.id);
             let data = ymlR.success ? (ymlR.data || {}) : {};
 
@@ -179,13 +200,13 @@
                 return;
             }
 
-            // 构建新条目
-            data[key] = { name, slug, title, image };
+            data[key] = { name, slug, title, name_zh: nameZh, image };
             if (desc) data[key].desc = desc;
             data[key].order = order;
 
             const wR = await window.yolongcms.categories.write(site.id, data);
             if (wR.success) {
+                await syncZhCategories(site.id, data);
                 showToast('✅ 分类 "' + title + '" 已添加');
                 closeAdd();
                 loadCategories();
@@ -205,7 +226,6 @@
         const site = getSite();
         document.getElementById('catDeleteError').textContent = '';
 
-        // 异步检查产品/文章引用数
         (async () => {
             if (!site) return;
             const [pR, aR] = await Promise.all([
@@ -247,6 +267,7 @@
 
             const wR = await window.yolongcms.categories.write(site.id, data);
             if (wR.success) {
+                await syncZhCategories(site.id, data);
                 showToast('✅ 分类 "' + name + '" 已删除');
                 closeDelete();
                 loadCategories();
@@ -272,6 +293,7 @@
             document.getElementById('catEditName').value = entry.name || '';
             document.getElementById('catEditSlug').value = entry.slug || '';
             document.getElementById('catEditTitle').value = entry.title || '';
+            document.getElementById('catEditNameZh').value = entry.name_zh || '';
             document.getElementById('catEditDesc').value = entry.desc || '';
             document.getElementById('catEditImage').value = entry.image || '';
             document.getElementById('catEditOrder').value = entry.order || 99;
@@ -288,6 +310,7 @@
         const name = document.getElementById('catEditName').value.trim();
         const slug = document.getElementById('catEditSlug').value.trim() || key;
         const title = document.getElementById('catEditTitle').value.trim();
+        const nameZh = document.getElementById('catEditNameZh').value.trim() || title;
         const desc = document.getElementById('catEditDesc').value.trim();
         const image = document.getElementById('catEditImage').value.trim();
         const order = parseInt(document.getElementById('catEditOrder').value) || 99;
@@ -302,12 +325,13 @@
             const ymlR = await window.yolongcms.categories.read(site.id);
             let data = ymlR.success ? (ymlR.data || {}) : {};
 
-            data[key] = { name, slug, title, image };
+            data[key] = { name, slug, title, name_zh: nameZh, image };
             if (desc) data[key].desc = desc;
             data[key].order = order;
 
             const wR = await window.yolongcms.categories.write(site.id, data);
             if (wR.success) {
+                await syncZhCategories(site.id, data);
                 showToast('✅ 分类 "' + title + '" 已更新');
                 closeEdit();
                 loadCategories();
@@ -321,7 +345,6 @@
 
     // ===== 事件绑定 =====
     function bindEvents() {
-        // 重命名
         document.getElementById('catRenameClose').addEventListener('click', closeRename);
         document.getElementById('catRenameCancel').addEventListener('click', closeRename);
         document.getElementById('catRenameConfirm').addEventListener('click', confirmRename);
@@ -330,7 +353,6 @@
             if (e.key === 'Escape') closeRename();
         });
 
-        // 添加
         document.getElementById('btnAddCategory').addEventListener('click', openAdd);
         document.getElementById('catAddClose').addEventListener('click', closeAdd);
         document.getElementById('catAddCancel').addEventListener('click', closeAdd);
@@ -339,7 +361,6 @@
             if (e.key === 'Enter') confirmAdd();
             if (e.key === 'Escape') closeAdd();
         });
-        // 自动填充 slug
         document.getElementById('catAddKey').addEventListener('input', function () {
             const slugEl = document.getElementById('catAddSlug');
             if (!slugEl.value || slugEl.dataset.auto === 'true') {
@@ -351,7 +372,6 @@
             this.dataset.auto = 'false';
         });
 
-        // 删除
         document.getElementById('catDeleteClose').addEventListener('click', closeDelete);
         document.getElementById('catDeleteCancel').addEventListener('click', closeDelete);
         document.getElementById('catDeleteConfirm').addEventListener('click', confirmDelete);
@@ -359,7 +379,6 @@
             if (e.key === 'Escape') closeDelete();
         });
 
-        // 编辑
         document.getElementById('catEditClose').addEventListener('click', closeEdit);
         document.getElementById('catEditCancel').addEventListener('click', closeEdit);
         document.getElementById('catEditConfirm').addEventListener('click', confirmEdit);
@@ -369,6 +388,7 @@
         });
     }
 
+    // ===== 初始化 =====
     window.init_categories = async function () { bindEvents(); await loadCategories(); };
     window.addEventListener('siteChanged', () => { loadCategories(); });
 })();
