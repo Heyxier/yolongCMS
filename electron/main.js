@@ -130,8 +130,12 @@ function registerIpcHandlers() {
         }
         try {
             const git = simpleGit();
-            await git.clone(repoUrl, targetDir, ['--branch', branch || 'main']);
-            logService.append('info', 'git', '仓库克隆成功', { siteId, repoUrl, branch: branch || 'main' });
+            const branchName = branch || 'main';
+            await git.clone(repoUrl, targetDir, ['--branch', branchName]);
+            // clone 后用 checkout 建立本地分支 + upstream 跟踪
+            const repoGit = simpleGit(targetDir);
+            await repoGit.checkout(branchName);
+            logService.append('info', 'git', '仓库克隆成功', { siteId, repoUrl, branch: branchName });
             return { success: true, path: targetDir };
         } catch (err) {
             logService.append('error', 'git', '仓库克隆失败: ' + (err.message || '未知错误'), { siteId, repoUrl, error: err.message });
