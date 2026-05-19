@@ -648,6 +648,8 @@ function registerIpcHandlers() {
 
         // 检查图片被引用的位置
         const imageFilename = path.basename(relPath);
+        const imageFullPath = relPath.replace(/\\/g, '/');         // 统一为正斜杠
+        const imageFullPathSlash = '/' + imageFullPath;            // 带前导斜杠
         const references = [];
 
         // 搜索辅助函数：在文本中搜索图片路径的各种写法
@@ -662,7 +664,7 @@ function registerIpcHandlers() {
                 const trimmed = line.trim();
                 // 跳过注释行
                 if (trimmed.startsWith('#') || trimmed.startsWith('//')) return;
-                if (trimmed.includes(imageFilename)) {
+                if (trimmed.includes(imageFullPath) || trimmed.includes(imageFullPathSlash)) {
                     found.push({
                         file: sourceName,
                         type: sourceType,
