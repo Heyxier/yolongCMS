@@ -3,8 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { app } = require('electron');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = path.join(app.getPath('userData'), 'data');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 function ensureDir(dir) {

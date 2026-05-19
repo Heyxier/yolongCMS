@@ -13,10 +13,10 @@ const logService = require('../services/log-service');
 const configService = require('../services/config-service');
 
 // ===== 路径常量 =====
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = path.join(app.getPath('userData'), 'data');
 const SITES_FILE = path.join(DATA_DIR, 'sites.json');
 const APP_FILE = path.join(DATA_DIR, 'app.json');
-const REPOS_DIR = path.join(__dirname, '..', 'repos');
+const REPOS_DIR = path.join(app.getPath('userData'), 'repos');
 
 // ===== 工具函数 =====
 function ensureDir(dir) {
@@ -121,7 +121,7 @@ function registerIpcHandlers() {
 
     // 克隆站点 Git 仓库到本地
     ipcMain.handle('sites:clone-repo', async (_event, { repoUrl, siteId, branch }) => {
-        const targetDir = path.join(__dirname, '..', 'repos', siteId);
+        const targetDir = path.join(app.getPath('userData'), 'repos', siteId);
         ensureDir(path.dirname(targetDir));
         if (fs.existsSync(targetDir)) {
             // 目录已存在 → 视为已克隆，返回成功

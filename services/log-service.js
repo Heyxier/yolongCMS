@@ -2,8 +2,9 @@
 // 记录用户操作、Git 操作、系统事件等
 const fs = require('fs');
 const path = require('path');
+const { app } = require('electron');
 
-const LOG_FILE = path.join(__dirname, '..', 'data', 'logs.json');
+const LOG_FILE = path.join(app.getPath('userData'), 'data', 'logs.json');
 const MAX_LOGS = 2000; // 最多保留 2000 条
 
 function ensureFile() {
