@@ -33,6 +33,7 @@
     "files": [
       "electron/**/*",
       "src/**/*",
+      "services/**/*",
       "node_modules/**/*",
       "package.json"
     ]
