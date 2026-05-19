@@ -1,8 +1,8 @@
-// YolongCMS Desktop — 发布管理 (v2: 认证推送 + UI 锁定)
+// YolongCMS Desktop — 发布管理 (v3: 自适应单按钮)
 (function () {
     'use strict';
 
-    function escapeHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escapeHtml(s) { if (!s) return ''; const div = document.createElement('div'); div.textContent = s; return div.innerHTML; }
     function showToast(m) {
         let t = document.getElementById('toast');
         if (!t) {
@@ -57,6 +57,7 @@
         const $empty = document.getElementById('publishEmpty');
         const $info = document.getElementById('publishInfo');
         const $content = document.getElementById('publishContent');
+        const $btn = document.getElementById('btnCommitPush');
 
         if (!site) {
             $empty.style.display = 'flex';
@@ -93,7 +94,6 @@
 
                 if (!files.length) {
                     $fl.innerHTML = '<div class="log-empty">暂无变更</div>';
-                    document.getElementById('btnCommitPush').disabled = true;
                 } else {
                     let html = '';
                     files.forEach(f => {
@@ -104,7 +104,17 @@
                         html += '</div>';
                     });
                     $fl.innerHTML = html;
-                    document.getElementById('btnCommitPush').disabled = false;
+                }
+
+                // ===== 自适应按钮：有推送→推送，没推送→提交 =====
+                if (ahead > 0) {
+                    $btn.textContent = '📤 推送';
+                    $btn.disabled = false;
+                } else if (files.length > 0) {
+                    $btn.textContent = '📝 提交';
+                    $btn.disabled = false;
+                } else {
+                    $btn.disabled = true;
                 }
 
                 const logR = await window.yolongcms.git.log(repoDir, 5);
@@ -136,19 +146,14 @@
         return map[s] || '';
     }
 
-    // ===== 核心：提交并推送（带认证检查 + UI 锁定） =====
-    async function commitAndPush() {
+    // ===== 仅推送（本地已经提交过了，只是推到远程） =====
+    async function pushOnly() {
         const site = getSite();
         if (!site) { showToast('请先选择一个站点'); return; }
 
-        const msg = document.getElementById('pubCommitMsg').value.trim();
-        if (!msg) { showToast('请输入提交信息'); return; }
-
-        // 第一步：检查 GitHub 认证
         const auth = await checkGitHubAuth();
         if (!auth.ok) {
             showToast('⚠️ 请先在设置中配置 GitHub Token');
-            // 弹出确认对话框
             if (confirm('未配置 GitHub Token，无法推送。是否前往设置页面进行配置？')) {
                 if (window.__app) window.__app.loadPage('settings');
             }
@@ -156,60 +161,94 @@
         }
 
         const repoDir = site.id;
+        const $btn = document.getElementById('btnCommitPush');
 
-        // 第二步：锁定 UI，显示加载遮罩
-        showOverlay('⏳ 正在同步远程代码...', 'git pull', repoDir);
-        document.getElementById('btnCommitPush').disabled = true;
+        showOverlay('📤 正在推送到远程...', '', repoDir);
+        $btn.disabled = true;
 
         try {
-            // 第三步：先 pull 保证本地为最新
-            updateOverlay('⏳ 正在同步远程代码...', 'git pull');
-            const pullR = await window.yolongcms.git.pull(repoDir);
-            if (!pullR.success && pullR.error && pullR.error.includes('conflict')) {
-                hideOverlay();
-                showToast('❌ 同步失败: 存在冲突，请手动解决');
-                document.getElementById('btnCommitPush').disabled = false;
-                return;
-            }
-
-            // 第四步：add + commit
-            updateOverlay('⏳ 正在提交本地变更...', 'git add + commit');
-            const commitR = await window.yolongcms.git.commit(repoDir, msg);
-            if (!commitR.success) {
-                hideOverlay();
-                showToast('❌ 提交失败: ' + commitR.error);
-                document.getElementById('btnCommitPush').disabled = false;
-                return;
-            }
-
-            updateOverlay('✅ 提交成功 (' + commitR.commitHash.substring(0, 7) + ')', '⏳ 正在推送到远程...');
-
-            // 第五步：使用 Token 认证推送
             const pushR = await window.yolongcms.git.pushAuth(repoDir);
             if (pushR.success) {
                 updateOverlay('', '✅ 推送成功！');
-                // 短暂展示成功状态后关闭遮罩
                 setTimeout(() => {
                     hideOverlay();
-                    document.getElementById('pubCommitMsg').value = '';
                     showToast('🚀 已发布到 GitHub！');
                     refresh();
                 }, 1200);
             } else {
                 hideOverlay();
-                showToast('⚠️ 已提交但推送失败: ' + pushR.error);
-                document.getElementById('btnCommitPush').disabled = false;
-                // 仍显示结果
+                showToast('⚠️ 推送失败: ' + pushR.error);
+                $btn.disabled = false;
                 const $result = document.getElementById('pubResult');
                 $result.style.display = 'block';
-                $result.innerHTML = '✅ 提交成功 (' + commitR.commitHash.substring(0, 7) + ')<br>⚠️ 推送失败: ' + escapeHtml(pushR.error) + '<br>稍后可在命令行手动 <code>git push</code>';
+                $result.innerHTML = '⚠️ 推送失败: ' + escapeHtml(pushR.error) + '<br>稍后可重试';
                 $result.className = 'pub-result pub-result-warn';
                 refresh();
             }
         } catch (err) {
             hideOverlay();
+            showToast('❌ 推送失败: ' + err.message);
+            $btn.disabled = false;
+        }
+    }
+
+    // ===== 仅提交（pull → add → commit，不推送） =====
+    async function commitOnly() {
+        const site = getSite();
+        if (!site) { showToast('请先选择一个站点'); return; }
+
+        const msg = document.getElementById('pubCommitMsg').value.trim();
+        if (!msg) { showToast('请输入提交信息'); return; }
+
+        const repoDir = site.id;
+        const $btn = document.getElementById('btnCommitPush');
+
+        showOverlay('⏳ 正在同步远程代码...', 'git pull', repoDir);
+        $btn.disabled = true;
+
+        try {
+            // 先 pull
+            updateOverlay('⏳ 正在同步远程代码...', 'git pull');
+            const pullR = await window.yolongcms.git.pull(repoDir);
+            if (!pullR.success && pullR.error && pullR.error.includes('conflict')) {
+                hideOverlay();
+                showToast('❌ 同步失败: 存在冲突，请手动解决');
+                $btn.disabled = false;
+                return;
+            }
+
+            // add + commit
+            updateOverlay('⏳ 正在提交本地变更...', 'git add + commit');
+            const commitR = await window.yolongcms.git.commit(repoDir, msg);
+            if (!commitR.success) {
+                hideOverlay();
+                showToast('❌ 提交失败: ' + commitR.error);
+                $btn.disabled = false;
+                return;
+            }
+
+            const shortHash = commitR.commitHash?.substring(0, 7) || '';
+            updateOverlay('', '✅ 已提交 ' + shortHash);
+            setTimeout(() => {
+                hideOverlay();
+                document.getElementById('pubCommitMsg').value = '';
+                showToast('✅ 已提交本地');
+                refresh();
+            }, 1200);
+        } catch (err) {
+            hideOverlay();
             showToast('❌ 操作失败: ' + err.message);
-            document.getElementById('btnCommitPush').disabled = false;
+            $btn.disabled = false;
+        }
+    }
+
+    // ===== 主按钮点击：根据按钮文字自动选择行为 =====
+    async function onMainButtonClick() {
+        const $btn = document.getElementById('btnCommitPush');
+        if ($btn.textContent.includes('📤')) {
+            await pushOnly();
+        } else {
+            await commitOnly();
         }
     }
 
@@ -227,7 +266,7 @@
     }
 
     function bindEvents() {
-        document.getElementById('btnCommitPush').addEventListener('click', commitAndPush);
+        document.getElementById('btnCommitPush').addEventListener('click', onMainButtonClick);
         document.getElementById('btnGitPull').addEventListener('click', gitPull);
     }
 
