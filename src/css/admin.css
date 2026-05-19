@@ -1,19 +1,19 @@
-/* ─── YolongCMS — 深色管理后台样式 ──────────────── */
+/* ─── YolongCMS — 浅色管理后台样式 ──────────────── */
 
 /* ===== 颜色变量 ===== */
 :root {
-    --bg-primary: #0f1117;
-    --bg-secondary: #161822;
-    --bg-sidebar: #12141e;
-    --bg-hover: #1e2133;
-    --bg-active: #1a8cff15;
-    --border-color: #23263b;
-    --text-primary: #e4e6ef;
-    --text-secondary: #8b8fa3;
-    --text-muted: #5a5e72;
-    --accent: #1a8cff;
-    --accent-hover: #3aa0ff;
-    --accent-bg: #1a8cff12;
+    --bg-primary: #f2f3f8;       /* 内容区背景 - 暖灰白 */
+    --bg-secondary: #ffffff;     /* 卡片/顶栏 - 纯白 */
+    --bg-sidebar: #e8e9f0;      /* 侧边栏 - 浅灰 */
+    --bg-hover: #e2e4ec;        /* 悬停态 */
+    --bg-active: #1a8cff0d;     /* 选中态 */
+    --border-color: #d6d8e0;    /* 边框 */
+    --text-primary: #1e2133;    /* 主文字 - 柔黑 */
+    --text-secondary: #5a5f75;  /* 辅助文字 */
+    --text-muted: #959ab0;      /* 弱化文字 */
+    --accent: #1a8cff;          /* 主色调 */
+    --accent-hover: #0a7bf0;
+    --accent-bg: #1a8cff0d;
     --success: #22c55e;
     --warning: #f59e0b;
     --danger: #ef4444;
