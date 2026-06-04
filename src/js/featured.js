@@ -71,7 +71,6 @@
             const nameZh = cat.name_zh || item.slug;
             html += '<div class="pub-file-row" style="display:flex;align-items:center;gap:8px;">';
             html += '  <span style="flex:1;"><strong>' + escapeHtml(nameZh) + '</strong> <span style="color:var(--text-muted);font-size:12px;">(' + escapeHtml(item.slug) + ')</span></span>';
-            if (item.tag) html += '  <span class="pub-file-status status-add">' + escapeHtml(item.tag) + '</span>';
             html += '  <button class="btn btn-danger-outline btn-sm feat-remove-btn" data-idx="' + idx + '">✕</button>';
             html += '</div>';
         });
@@ -90,14 +89,12 @@
         const $checkboxes = document.querySelectorAll('.feat-category-cb:checked');
         const selected = Array.from($checkboxes).map(cb => cb.value);
         if (!selected.length) { showToast('请至少选择一个品类'); return; }
-        const tag = document.getElementById('featTag').value.trim();
         const existingSlugs = new Set(featuredItems.filter(i => i.type === 'category').map(i => i.slug));
         let added = 0;
-        selected.forEach(slug => { if (!existingSlugs.has(slug)) { featuredItems.push({ type: 'category', slug: slug, tag: tag || undefined }); added++; } });
+        selected.forEach(slug => { if (!existingSlugs.has(slug)) { featuredItems.push({ type: 'category', slug: slug }); added++; } });
         if (!added) { showToast('所选品类已在推荐列表中'); return; }
         await saveAndRefresh();
         showToast('✅ 已添加 ' + added + ' 个推荐品类');
-        document.getElementById('featTag').value = '';
     }
 
     async function clearFeatured() {
