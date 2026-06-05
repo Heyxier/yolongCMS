@@ -44,7 +44,7 @@ CORS_ORIGINS = [
 ]
 
 # ─── 初始化数据库 ───────────────────────────────
-WEBSITE_REPO = "/home/admin/yolongtec-v7.2"
+WEBSITE_REPO = "/home/admin/yolongtec-website-v8"
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)

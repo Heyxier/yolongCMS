@@ -12,7 +12,15 @@ const path = require('path');
 async function pull(repoDir) {
     try {
         const git = simpleGit(repoDir);
-        await git.pull();
+        // 检查是否在分支上
+        const branch = await git.revparse(['--abbrev-ref', 'HEAD']);
+        if (branch === 'HEAD') {
+            // detached HEAD 状态：先切到 main 再拉取
+            await git.checkout('main');
+            await git.pull('origin', 'main');
+            return { success: true, message: '已切换到 main 分支并拉取最新代码' };
+        }
+        await git.pull('origin', branch);
         return { success: true, message: '拉取成功' };
     } catch (err) {
         return { success: false, error: err.message || '拉取失败' };
