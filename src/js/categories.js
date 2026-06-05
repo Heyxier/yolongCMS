@@ -159,7 +159,6 @@
     // ===== 添加分类 =====
     function openAdd() {
         document.getElementById('catAddKey').value = '';
-        document.getElementById('catAddName').value = '';
         document.getElementById('catAddSlug').value = '';
         document.getElementById('catAddTitle').value = '';
         document.getElementById('catAddNameZh').value = '';
@@ -175,9 +174,9 @@
 
     async function confirmAdd() {
         const key = document.getElementById('catAddKey').value.trim();
-        const name = document.getElementById('catAddName').value.trim();
         const slug = document.getElementById('catAddSlug').value.trim() || key;
         const title = document.getElementById('catAddTitle').value.trim();
+        const name = title || key;
         const nameZh = document.getElementById('catAddNameZh').value.trim() || title;
         const desc = document.getElementById('catAddDesc').value.trim();
         const image = document.getElementById('catAddImage').value.trim();
@@ -185,7 +184,6 @@
 
         if (!key) { document.getElementById('catAddError').textContent = '请输入分类 ID'; return; }
         if (!/^[a-z0-9_-]+$/.test(key)) { document.getElementById('catAddError').textContent = '分类 ID 只能含小写英文、数字、下划线和连字符'; return; }
-        if (!name) { document.getElementById('catAddError').textContent = '请输入显示名称'; return; }
         if (!title) { document.getElementById('catAddError').textContent = '请输入中文标题'; return; }
 
         const site = getSite();
@@ -290,7 +288,6 @@
             const entry = data[name] || {};
 
             document.getElementById('catEditKey').value = name;
-            document.getElementById('catEditName').value = entry.name || '';
             document.getElementById('catEditSlug').value = entry.slug || '';
             document.getElementById('catEditTitle').value = entry.title || '';
             document.getElementById('catEditNameZh').value = entry.name_zh || '';
@@ -299,7 +296,7 @@
             document.getElementById('catEditOrder').value = entry.order || 99;
             document.getElementById('catEditError').textContent = '';
             document.getElementById('catEditModal').style.display = 'flex';
-            setTimeout(() => document.getElementById('catEditName').focus(), 100);
+            setTimeout(() => document.getElementById('catEditTitle').focus(), 100);
         })();
     }
 
@@ -307,15 +304,14 @@
 
     async function confirmEdit() {
         const key = document.getElementById('catEditKey').value.trim();
-        const name = document.getElementById('catEditName').value.trim();
         const slug = document.getElementById('catEditSlug').value.trim() || key;
         const title = document.getElementById('catEditTitle').value.trim();
+        const name = title || key;
         const nameZh = document.getElementById('catEditNameZh').value.trim() || title;
         const desc = document.getElementById('catEditDesc').value.trim();
         const image = document.getElementById('catEditImage').value.trim();
         const order = parseInt(document.getElementById('catEditOrder').value) || 99;
 
-        if (!name) { document.getElementById('catEditError').textContent = '请输入显示名称'; return; }
         if (!title) { document.getElementById('catEditError').textContent = '请输入中文标题'; return; }
 
         const site = getSite();

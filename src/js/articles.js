@@ -562,7 +562,6 @@
             document.getElementById('afTitle').value = d.title || '';
             document.getElementById('afCategory').value = d.category || '';
             document.getElementById('afPlacement').value = d.placement || 'news';
-            document.getElementById('afLang').value = d.lang || 'en';
             document.getElementById('afPublishedAt').value = d.publishedAt || '';
             document.getElementById('afStatus').checked = d.status !== false;
             updateStatusText();
@@ -584,7 +583,6 @@
         document.getElementById('afTitle').value = '';
         document.getElementById('afCategory').value = '';
         document.getElementById('afPlacement').value = 'news';
-        document.getElementById('afLang').value = 'en';
         document.getElementById('afPublishedAt').value = new Date().toISOString().split('T')[0];
         document.getElementById('afStatus').checked = true;
         updateStatusText();
@@ -612,8 +610,8 @@
         const slug = slugify(title);
         const filename = slug + '.md';
 
-        const lang = document.getElementById('afLang').value;
-        const targetCollection = lang === 'zh' ? 'zh' : 'en';
+        const lang = 'zh';
+        const targetCollection = 'zh';
 
         if (!editingFile) {
             // 检查同语言集合内是否有重名
